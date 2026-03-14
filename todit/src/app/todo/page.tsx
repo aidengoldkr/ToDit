@@ -139,6 +139,25 @@ function TodoContent() {
     setIsEditing(false);
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!confirm("정말 이 To-Do를 삭제하시겠습니까? 복구할 수 없습니다.")) return;
+
+    try {
+      const res = await fetch(`/api/todo/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        alert("성공적으로 삭제되었습니다.");
+        router.replace("/dashboard");
+      } else {
+        const data = await res.json();
+        alert(data.error || "삭제에 실패했습니다.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
   // Helper for text inputs
   const handleTextChange = (field: keyof ActionPlan, value: string) => {
     if (!draftResult) return;
@@ -452,7 +471,13 @@ function TodoContent() {
                 <button className={styles.saveBtn} onClick={handleSave}>저장</button>
               </div>
             ) : (
-              <div className={styles.editButtonContainer} style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <div className={styles.editButtonContainer} style={{ width: '100%', justifyContent: 'flex-end', gap: '8px' }}>
+                <button className={styles.deleteBtn} onClick={handleDelete} title="삭제">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  삭제
+                </button>
                 <button className={styles.editBtn} onClick={handleEdit}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>

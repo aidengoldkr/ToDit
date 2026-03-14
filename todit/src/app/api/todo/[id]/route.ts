@@ -39,3 +39,50 @@ export async function GET(
 
   return NextResponse.json(data.plan);
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
+  const { id } = params;
+  const idResult = TodoIdSchema.safeParse(id);
+  if (!idResult.success) {
+    return NextResponse.json({ error: "유효한 ID 형식이 아닙니다." }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+  if (!supabase) {
+    return NextResponse.json({ error: "DB 연결 실패" }, { status: 500 });
+  }
+
+  // 먼저 본인 것인지 확인
+  const { data: item, error: checkError } = await supabase
+    .from("saved_todo")
+    .select("user_id")
+    .eq("id", id)
+    .single();
+
+  if (checkError || !item) {
+    return NextResponse.json({ error: "항목을 찾을 수 없습니다." }, { status: 404 });
+  }
+
+  if (item.user_id !== session.user.id) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
+  const { error } = await supabase
+    .from("saved_todo")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json({ error: "삭제 실패" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
