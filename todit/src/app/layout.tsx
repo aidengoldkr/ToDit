@@ -53,6 +53,11 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9143389587385709"
+          crossOrigin="anonymous"
+        ></script>
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
