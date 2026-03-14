@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://todit.aidengoldkr.dev'),
   title: "ToDit - 모든 문서를 To-Do로 한 번에 변환",
   description: "안내문, 공지사항, 이미지 속 할 일을 AI가 즉시 추출하여 체크리스트로 만들어 드립니다.",
   icons: {

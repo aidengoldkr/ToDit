@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { clearStoredActionPlan, readStoredActionPlan, writeStoredActionPlan } from "@/lib/action-plan-session";
 import type { ActionPlan, ActionItem } from "@/types";
 import styles from "./page.module.css";
@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { SiGooglecalendar } from "react-icons/si";
 
-export default function TodoPage() {
+function TodoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -596,5 +596,18 @@ export default function TodoPage() {
 
       </div>
     </div>
+  );
+}
+export default function TodoPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.container}>
+        <div className={styles.emptyState}>
+          <p>로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <TodoContent />
+    </Suspense>
   );
 }
