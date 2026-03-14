@@ -1,0 +1,54 @@
+:root {
+    --font-sans: 'Paperozi', Inter, Pretendard, system-ui, sans-serif;
+
+    --white: #f2f2f2;
+    --black: #1d1d1d;
+    --accent: #10b981;
+
+    --bg: #f2f2f2;
+    --surface: #ffffff;
+    --surface-soft: #f8f8f8;
+    --text: #1d1d1d;
+    --muted: #6b7280;
+
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+
+    --accent-soft: #d1fae5;
+    --success-soft: #ecfdf5;
+    --warning-soft: #fffbeb;
+    --danger-soft: #fef2f2;
+
+    --notice-text: #92400e;
+    --tiny-btn-border: #a7f3d0;
+    --tiny-btn-text: #047857;
+
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 12px;
+
+    --shadow: 0 8px 24px rgba(29, 29, 29, 0.06);
+
+}
+
+html.dark {
+    --bg: #111111;
+    --surface: #1d1d1d;
+    --surface-soft: #252525;
+    --text: #f2f2f2;
+    --muted: #a1a1aa;
+
+    --border: #2f2f2f;
+    --border-strong: #3a3a3a;
+
+    --accent-soft: rgba(16, 185, 129, 0.14);
+    --success-soft: rgba(16, 185, 129, 0.12);
+    --warning-soft: rgba(245, 158, 11, 0.14);
+    --danger-soft: rgba(239, 68, 68, 0.12);
+
+    --notice-text: #fbbf24;
+    --tiny-btn-border: rgba(16, 185, 129, 0.28);
+    --tiny-btn-text: #34d399;
+
+    --shadow: none;
+}

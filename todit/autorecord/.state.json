@@ -1,0 +1,263 @@
+﻿{
+    "generatedAt":  "2026-03-13T08:03:20.7746822Z",
+    "files":  {
+                  "README.md":  {
+                                    "hash":  "60B55FF7DF79AF72590F9524208E46642BC32BDC175CDAD41349681C0E2F958F",
+                                    "size":  1450,
+                                    "lastWriteTimeUtc":  "2026-01-31T12:46:53.0868477Z",
+                                    "owner":  "사용자 직접 구현"
+                                },
+                  "src/lib/supabase/storage.ts":  {
+                                                      "hash":  "3A6301F05B3CB1E42CA8D2BFE22C9E0CFA38103FB892E5C321D4BF39A357EFE0",
+                                                      "size":  1162,
+                                                      "lastWriteTimeUtc":  "2026-03-05T23:13:31.0497134Z",
+                                                      "owner":  "사용자 직접 구현"
+                                                  },
+                  ".gitignore":  {
+                                     "hash":  "E52AE0F056C9024747C298B0323584CFBBE40D56E570317CA4A0CBA4FB22B028",
+                                     "size":  404,
+                                     "lastWriteTimeUtc":  "2026-03-12T06:05:14.0413701Z",
+                                     "owner":  "사용자 직접 구현"
+                                 },
+                  "src/lib/openai.ts":  {
+                                            "hash":  "66B3B35044A68712C9F31A3FBCD8ADE6D565C1356067522B0E996C1F548A7C97",
+                                            "size":  6692,
+                                            "lastWriteTimeUtc":  "2026-03-05T23:14:20.3174010Z",
+                                            "owner":  "사용자 직접 구현"
+                                        },
+                  "src/app/todo/page.module.css":  {
+                                                       "hash":  "202BE83E02849661338F4594E9483E2FA8B82ABE6E51A98C1AFFD6DE840508A5",
+                                                       "size":  3713,
+                                                       "lastWriteTimeUtc":  "2026-03-13T02:58:37.6636122Z",
+                                                       "owner":  "사용자 직접 구현"
+                                                   },
+                  "src/lib/credits.ts":  {
+                                             "hash":  "87C9D3B84F3B435910B3041DD436F4789353D90602660D23A189BF0DB5D515AF",
+                                             "size":  4625,
+                                             "lastWriteTimeUtc":  "2026-03-05T23:14:54.7624088Z",
+                                             "owner":  "사용자 직접 구현"
+                                         },
+                  "package-lock.json":  {
+                                            "hash":  "391BB8D795ACCC83183680679B780D0A45A9F9A12A659EA40AB8A22F74CD2683",
+                                            "size":  86287,
+                                            "lastWriteTimeUtc":  "2026-03-05T23:16:45.4352825Z",
+                                            "owner":  "사용자 직접 구현"
+                                        },
+                  "src/styles/tokens.css":  {
+                                                "hash":  "EB0B2E5A67E4FBF8ABC8E8EA96BF323B679165B4D8789A9D2FE1AD7CFCF82400",
+                                                "size":  1300,
+                                                "lastWriteTimeUtc":  "2026-03-12T16:40:59.3240879Z",
+                                                "owner":  "사용자 직접 구현"
+                                            },
+                  "src/app/api/auth/[...nextauth]/route.ts":  {
+                                                                  "hash":  "20DE7FAED4421470E1DD8D7CC4E2C0F840228A836CD0859545E8B09D8126EC1A",
+                                                                  "size":  169,
+                                                                  "lastWriteTimeUtc":  "2026-03-05T23:15:47.5347999Z",
+                                                                  "owner":  "사용자 직접 구현"
+                                                              },
+                  "src/app/todo/page.tsx":  {
+                                                "hash":  "5B79E84DDD74AF1B2FB4BEF894E3BE37104A2654DE63BD797A9B5DDED69E97F3",
+                                                "size":  5581,
+                                                "lastWriteTimeUtc":  "2026-03-13T02:58:37.6624296Z",
+                                                "owner":  "사용자 직접 구현"
+                                            },
+                  "src/app/todo/layout.tsx":  {
+                                                  "hash":  "686E8E3899C84D74D834F7299DBDED93C242818EE4AE9B14B566971693893D56",
+                                                  "size":  138,
+                                                  "lastWriteTimeUtc":  "2026-03-12T17:19:25.5356765Z",
+                                                  "owner":  "사용자 직접 구현"
+                                              },
+                  "tsconfig.json":  {
+                                        "hash":  "53F96418E60724DE8C624DE8D7D1B549F64A6C34A5F40F07A7596AF4380C92F6",
+                                        "size":  578,
+                                        "lastWriteTimeUtc":  "2026-03-05T22:33:50.1321549Z",
+                                        "owner":  "사용자 직접 구현"
+                                    },
+                  "package.json":  {
+                                       "hash":  "32E6124DFCD7361253C005CB2D7166741875BA0A07BC479EB926ED7EB3D45F19",
+                                       "size":  569,
+                                       "lastWriteTimeUtc":  "2026-03-05T23:16:45.4008861Z",
+                                       "owner":  "사용자 직접 구현"
+                                   },
+                  "src/styles/globals.css":  {
+                                                 "hash":  "432FDAA2CC09532BB6AF78B56042802CFDAAA7CF29B925C7CAC5159E41EE8A41",
+                                                 "size":  3005,
+                                                 "lastWriteTimeUtc":  "2026-03-12T16:53:50.1861407Z",
+                                                 "owner":  "사용자 직접 구현"
+                                             },
+                  "src/middleware.ts":  {
+                                            "hash":  "E5D827B0BBDE4286F6B23C6F8B4416463339725104369C7EB1E9C82D7CAF9429",
+                                            "size":  933,
+                                            "lastWriteTimeUtc":  "2026-03-13T01:30:06.9094749Z",
+                                            "owner":  "사용자 직접 구현"
+                                        },
+                  "src/lib/subscription.ts":  {
+                                                  "hash":  "38746280025E7922C8DD27C05433791874238BC7E760C89F16149EA0E0F78D34",
+                                                  "size":  1295,
+                                                  "lastWriteTimeUtc":  "2026-03-05T23:14:33.3209645Z",
+                                                  "owner":  "사용자 직접 구현"
+                                              },
+                  "src/app/page.tsx":  {
+                                           "hash":  "B505F9E61834B6159B3047C540B8200F5E6DFAAA875212054EAF39536417FE44",
+                                           "size":  5996,
+                                           "lastWriteTimeUtc":  "2026-03-09T15:49:45.7530068Z",
+                                           "owner":  "사용자 직접 구현"
+                                       },
+                  "src/app/page.module.css":  {
+                                                  "hash":  "B220D41D89817618FD61A7C34BCEAABBC8C8FF1BD2E5AA540EA07C992FB80373",
+                                                  "size":  2900,
+                                                  "lastWriteTimeUtc":  "2026-03-09T15:49:45.7540042Z",
+                                                  "owner":  "사용자 직접 구현"
+                                              },
+                  "src/lib/google-ocr.ts":  {
+                                                "hash":  "E4360DE8310F33944B30325E91ECD718662FCB6A58D2C591C632A448018F730C",
+                                                "size":  1697,
+                                                "lastWriteTimeUtc":  "2026-03-05T23:14:26.6664432Z",
+                                                "owner":  "사용자 직접 구현"
+                                            },
+                  "next.config.mjs":  {
+                                          "hash":  "4E1061F6B072603EAF2769AEC09F30230CD1D8E9086F1438136165F855EE75C2",
+                                          "size":  169,
+                                          "lastWriteTimeUtc":  "2026-03-05T23:17:44.7865142Z",
+                                          "owner":  "사용자 직접 구현"
+                                      },
+                  "src/lib/auth-options.ts":  {
+                                                  "hash":  "0A200C0DD59B36464F4D145408D3E7103AF8AB0E75C37CFC705B5537E28E04D9",
+                                                  "size":  891,
+                                                  "lastWriteTimeUtc":  "2026-03-13T00:33:26.8841750Z",
+                                                  "owner":  "사용자 직접 구현"
+                                              },
+                  "src/app/providers.tsx":  {
+                                                "hash":  "C8C0BE3AEC95BC6ACAE9B797B04A68855924E941A6F5553039350045FD8479C1",
+                                                "size":  206,
+                                                "lastWriteTimeUtc":  "2026-03-05T23:55:52.8303167Z",
+                                                "owner":  "사용자 직접 구현"
+                                            },
+                  "src/lib/consent.ts":  {
+                                             "hash":  "5300D96844E22D50E69C77B4760A138476005FAC93AD7F0BC4E1D394B612F553",
+                                             "size":  944,
+                                             "lastWriteTimeUtc":  "2026-03-05T23:14:59.3114021Z",
+                                             "owner":  "사용자 직접 구현"
+                                         },
+                  "CLAUDE.md":  {
+                                    "hash":  "F5511681D99B2DBF052A9EC03615CA72834699403E7044635D5824D7903181BE",
+                                    "size":  3602,
+                                    "lastWriteTimeUtc":  "2026-03-05T23:16:18.9633207Z",
+                                    "owner":  "AI 에이전트 구현"
+                                },
+                  "src/app/api/parse/route.ts":  {
+                                                     "hash":  "E1011CF2AA92E720E621D5B0332F1BAB255C44EEAA151BE63DD7F8332F357C08",
+                                                     "size":  9602,
+                                                     "lastWriteTimeUtc":  "2026-03-05T23:15:39.1518976Z",
+                                                     "owner":  "사용자 직접 구현"
+                                                 },
+                  ".env.local.example":  {
+                                             "hash":  "80C0E03C448D1213E09FCBFC508FDF040FED4A1AB8E5F773E2CAE1BAC9404B70",
+                                             "size":  531,
+                                             "lastWriteTimeUtc":  "2026-03-05T23:50:48.7091745Z",
+                                             "owner":  "사용자 직접 구현"
+                                         },
+                  "next-env.d.ts":  {
+                                        "hash":  "9DD9D642CDB87D4D5B3173217E0C45429B3E47A6F5CF5FB0EAD6C644EC5FED01",
+                                        "size":  228,
+                                        "lastWriteTimeUtc":  "2026-01-31T12:46:53.1141305Z",
+                                        "owner":  "사용자 직접 구현"
+                                    },
+                  "src/app/dashboard/page.module.css":  {
+                                                            "hash":  "90159F4C1A99EF8FB68A3B6070C66D061E4E291A5EC70A7EFA1B63831BC410C8",
+                                                            "size":  4112,
+                                                            "lastWriteTimeUtc":  "2026-03-13T03:00:36.9593328Z",
+                                                            "owner":  "사용자 직접 구현"
+                                                        },
+                  "src/app/favicon.ico":  {
+                                              "hash":  "2B8AD2D33455A8F736FC3A8EBF8F0BDEA8848AD4C0DB48A2833BD0F9CD775932",
+                                              "size":  25931,
+                                              "lastWriteTimeUtc":  "2026-01-31T12:46:53.0188521Z",
+                                              "owner":  "사용자 직접 구현"
+                                          },
+                  "src/app/globals.css":  {
+                                              "hash":  "E7660C007660EFA31F9538FEF1FA9B7C65326C2688735406795CA9D62158BDA9",
+                                              "size":  650,
+                                              "lastWriteTimeUtc":  "2026-03-09T15:49:45.7560041Z",
+                                              "owner":  "사용자 직접 구현"
+                                          },
+                  "tsconfig.tsbuildinfo":  {
+                                               "hash":  "CBDD6B6108956FC47FCFE68F94AAB45DB1740144D0B4D79A20FB5DD5B7CABEE5",
+                                               "size":  164036,
+                                               "lastWriteTimeUtc":  "2026-03-12T17:19:39.2520003Z",
+                                               "owner":  "사용자 직접 구현"
+                                           },
+                  "src/app/layout.tsx":  {
+                                             "hash":  "A8D32263C247C43C00E1BC6E024C1DE90D321781D357F1CD9C6AF0DA26125B15",
+                                             "size":  480,
+                                             "lastWriteTimeUtc":  "2026-03-12T16:52:44.2374950Z",
+                                             "owner":  "사용자 직접 구현"
+                                         },
+                  "src/lib/schema.ts":  {
+                                            "hash":  "6345AFD52F47F07FF2522676770A81894E36045257D143C8441A48FA6645FFB8",
+                                            "size":  2977,
+                                            "lastWriteTimeUtc":  "2026-03-05T23:13:42.3696995Z",
+                                            "owner":  "사용자 직접 구현"
+                                        },
+                  "src/lib/supabase/admin.ts":  {
+                                                    "hash":  "AF09C839F41BD96AE4F43226C94C901AA5B10FEA893D4C4D30D3D9618AFB83E6",
+                                                    "size":  324,
+                                                    "lastWriteTimeUtc":  "2026-03-05T23:13:25.9212081Z",
+                                                    "owner":  "사용자 직접 구현"
+                                                },
+                  "src/lib/action-plan-session.ts":  {
+                                                         "hash":  "92AD52E6A1898BDAA27814241A9EADC6DA30C057A27D41FA591C00F55F216A95",
+                                                         "size":  839,
+                                                         "lastWriteTimeUtc":  "2026-03-13T01:30:02.1001200Z",
+                                                         "owner":  "사용자 직접 구현"
+                                                     },
+                  "src/app/api/parse/upload-url/route.ts":  {
+                                                                "hash":  "7CF74F8BBC95E56C9B4829A4C8B88529E2245AE881ADE088FBF2BA71A1098E3C",
+                                                                "size":  2295,
+                                                                "lastWriteTimeUtc":  "2026-03-05T23:15:47.0431100Z",
+                                                                "owner":  "사용자 직접 구현"
+                                                            },
+                  "src/types/pdf-parse.d.ts":  {
+                                                   "hash":  "500246892C1EE0FCC10CD55A8ECDA0987E2D6A8C1103B6609028971A70DD9B4C",
+                                                   "size":  157,
+                                                   "lastWriteTimeUtc":  "2026-03-05T23:16:49.5765704Z",
+                                                   "owner":  "사용자 직접 구현"
+                                               },
+                  "src/types/index.ts":  {
+                                             "hash":  "B38688E88E954822B5E10D2EFC72F3FE1C07BE4E3770CE20983A52D55332B72D",
+                                             "size":  1661,
+                                             "lastWriteTimeUtc":  "2026-03-05T23:13:24.6466609Z",
+                                             "owner":  "사용자 직접 구현"
+                                         },
+                  ".env.local":  {
+                                     "hash":  "533F38EF4C186E666FAF4456FA8E87AD3C733748203542C9901239520F47E897",
+                                     "size":  3557,
+                                     "lastWriteTimeUtc":  "2026-02-21T11:41:41.4817145Z",
+                                     "owner":  "사용자 직접 구현"
+                                 },
+                  "src/types/next-auth.d.ts":  {
+                                                   "hash":  "9DFD4254A139BD5C17127B25F186338AC717BB579BCC598A3F54E08B48DF1CFE",
+                                                   "size":  201,
+                                                   "lastWriteTimeUtc":  "2026-03-05T23:17:06.0818192Z",
+                                                   "owner":  "사용자 직접 구현"
+                                               },
+                  "src/lib/auth.ts":  {
+                                          "hash":  "14E3A5BF094FDAAFFEDD37F859C70E3CDFB4D4DFD1246383F8D8D8BF8FC83039",
+                                          "size":  218,
+                                          "lastWriteTimeUtc":  "2026-03-05T23:15:04.7839095Z",
+                                          "owner":  "사용자 직접 구현"
+                                      },
+                  "src/app/dashboard/page.tsx":  {
+                                                     "hash":  "A27D4C9DE047C0C75AB373E60BD0CB38206E3D119D765255932979CED357B289",
+                                                     "size":  10312,
+                                                     "lastWriteTimeUtc":  "2026-03-13T02:58:37.6608770Z",
+                                                     "owner":  "사용자 직접 구현"
+                                                 },
+                  "sample/1.html":  {
+                                        "hash":  "99F0682CF6A0A908118FDC84C9B59406E2877CFFD9ADAA69739FCCA7C1CE0EB7",
+                                        "size":  16376,
+                                        "lastWriteTimeUtc":  "2026-03-13T02:58:51.6563501Z",
+                                        "owner":  "사용자 직접 구현"
+                                    }
+              }
+}

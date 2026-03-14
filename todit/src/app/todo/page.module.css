@@ -1,0 +1,629 @@
+.container {
+  background-color: var(--bg);
+  min-height: 100vh;
+  padding: 40px 24px;
+  font-family: var(--font-sans);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  margin-bottom: 128px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  width: 100%;
+  max-width: 1140px;
+  align-items: start;
+}
+
+/* Base Panel / Card */
+.panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  padding: 32px;
+}
+
+/* Left Main Area */
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.headerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.categoryBadge {
+  align-self: flex-start;
+  background-color: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+  margin: 0;
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keyword {
+  background-color: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.todoSectionTitle {
+  font-size: 18px;
+  font-weight: 400;
+  padding-bottom: 12px;
+  color: var(--text);
+  margin-bottom: 0;
+}
+
+.todoHeaderLayout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.sortControls {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+
+.sortBtn {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortBtn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.sortBtn.activeSort {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.todoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Todo Item */
+.todoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all 0.2s;
+}
+
+.todoItem:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-strong);
+}
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--border-strong);
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.checkbox:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.todoContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.todoTask {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.todoItem.done .todoTask {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.todoMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dueDate {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.priorityBadge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.priorityHigh {
+  background: var(--danger-soft);
+  color: #b91c1c;
+}
+
+.priorityMedium {
+  background: var(--warning-soft);
+  color: #92400e;
+}
+
+.priorityLow {
+  background: var(--success-soft);
+  color: var(--accent);
+}
+
+.calendarBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.calendarBtn:hover {
+  background: var(--surface-soft);
+  color: var(--white);
+  border-color: var(--accent);
+}
+
+.calendarBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Right Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sideCard {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.sideCardTitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sideIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.analysisText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.bulletList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+}
+
+.bulletItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.bulletIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.unknownsCard {
+  background-color: var(--warning-soft);
+  border-color: #6e290e;
+}
+
+.unknownsTitle {
+  color: #92400e;
+}
+
+.unknownsIcon {
+  color: #d97706;
+}
+
+.unknownsList .bulletItem {
+  color: #92400e;
+}
+
+.unknownsList .bulletIcon {
+  color: #d97706;
+}
+
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.emptyState h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.emptyState p {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.primaryBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.navAction {
+  margin-top: 24px;
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Edit Mode Styles */
+.editHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.editButtonContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editBtn {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editBtn:hover {
+  background: var(--surface-soft);
+}
+
+.saveBtn {
+  background: var(--accent);
+  color: white;
+  border: 1px solid var(--accent);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveBtn:hover {
+  background: #059669;
+}
+
+.editInput {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.editInput:focus {
+  border-color: var(--accent);
+}
+
+.titleInput {
+  font-size: 28px;
+  font-weight: 400;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+}
+
+.categoryInput {
+  width: auto;
+  min-width: 120px;
+  padding: 4px 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.editTextarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 12px;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.editTextarea:focus {
+  border-color: var(--accent);
+}
+
+.editSelect {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+}
+
+.removeBtn {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.removeBtn:hover {
+  background: var(--danger-soft);
+  color: #ef4444;
+}
+
+.addBtn {
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.addBtn:hover {
+  background: var(--accent-soft);
+}
+
+.editListItem {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .container {
+    padding: 20px 12px;
+    margin-bottom: 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px 20px;
+    margin-bottom: 48px;
+  }
+
+  .panel {
+    padding: 16px 12px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .categoryBadge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .keyword {
+    font-size: 10px;
+  }
+
+  .todoSectionTitle {
+    font-size: 13px;
+  }
+
+  .todoItem {
+    padding: 12px;
+  }
+
+  .todoTask {
+    font-size: 13px;
+  }
+
+  .dueDate {
+    font-size: 11px;
+  }
+
+  .priorityBadge {
+    font-size: 10px;
+  }
+
+  .sideCard {
+    padding: 14px;
+  }
+
+  .sideCardTitle {
+    font-size: 13px;
+  }
+
+  .analysisText {
+    font-size: 13px;
+  }
+
+  .bulletItem {
+    font-size: 13px;
+  }
+
+  .editHeader {
+    margin-bottom: 12px;
+  }
+
+  .editBtn,
+  .saveBtn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .calendarBtn span {
+    display: none;
+  }
+
+  .calendarBtn {
+    padding: 6px;
+  }
+}

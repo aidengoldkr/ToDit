@@ -1,0 +1,216 @@
+.container {
+  min-height: 100vh;
+  padding: 40px 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.title {
+  font-size: 38px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-bottom: 80px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+.proCard {
+  border: 2px solid var(--accent);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--accent) 100%);
+}
+
+.activeCard {
+  border-color: var(--accent);
+}
+
+.currentBadge,
+.currentBadgePro {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.currentBadge {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.currentBadgePro {
+  background: var(--accent);
+  color: white;
+}
+
+.planHeader {
+  margin-bottom: 32px;
+}
+
+.planName {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.price {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.price span {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.planDesc {
+  font-size: 15px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 40px 0;
+  flex-grow: 1;
+}
+
+.feature,
+.featureDisabled {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.featureDisabled {
+  color: var(--muted);
+}
+
+.check {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.checkPro {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.cross {
+  color: var(--muted);
+  font-weight: bold;
+}
+
+.planBtn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.planBtn:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.proBtn {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.proBtn:hover:not(:disabled) {
+  background: #3a4ab1;
+  transform: scale(1.02);
+}
+
+.planBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* FAQ Section */
+.faq {
+  max-width: 700px;
+  margin: 0 auto;
+  border-top: 1px solid var(--border);
+  padding-top: 60px;
+}
+
+.faqTitle {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.faqItem {
+  margin-bottom: 32px;
+}
+
+.faqItem h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.faqItem p {
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 30px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
