@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAuthenticatedClient } from "@/lib/supabase/authenticated";
 import { TodoIdSchema } from "@/lib/validators";
 
 export async function GET(
@@ -17,10 +18,7 @@ export async function GET(
   if (!idResult.success) {
     return NextResponse.json({ error: "유효한 ID 형식이 아닙니다." }, { status: 400 });
   }
-  const supabase = createAdminClient();
-  if (!supabase) {
-    return NextResponse.json({ error: "DB 연결 실패" }, { status: 500 });
-  }
+  const supabase = getAuthenticatedClient(session.user.id);
 
   const { data, error } = await supabase
     .from("saved_todo")

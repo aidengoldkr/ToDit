@@ -115,7 +115,7 @@ export default function PlanPage() {
               <span className={styles.checkPro}>✓</span> <strong>무제한</strong> To-Do 생성
             </li>
             <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> <strong>GPT-5</strong> 고성능 엔진 탑재
+              <span className={styles.checkPro}>✓</span> 더 강력한 <strong>AI 분석 엔진</strong> 탑재
             </li>
             <li className={styles.feature}>
               <span className={styles.checkPro}>✓</span> 상세도 커스텀 (3단계)

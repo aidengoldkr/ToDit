@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const usage = await getOrResetUsage(session.user.id);
+  const usage = await getOrResetUsage(session.user.id, session.user.name);
   if (!usage) {
     return NextResponse.json({ error: "Could not fetch usage" }, { status: 500 });
   }

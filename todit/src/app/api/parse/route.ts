@@ -65,11 +65,11 @@ export async function POST(request: Request) {
 
   // Free 요금제는 4o-mini 고정 및 우선순위 분석 불가 (Pro 전용 옵션 제어)
   const finalOptions = tier === "pro"
-    ? options
+    ? { ...options, model: "gpt-4o" } // Pro는 별칭 대신 안정적인 4o 모델 고정 사용
     : { model: "gpt-4o-mini", usePriority: false };
 
   if (session?.user?.id) {
-    const usage = await getOrResetUsage(session.user.id);
+    const usage = await getOrResetUsage(session.user.id, session.user.name);
     if (tier === "free" && usage && usage.count >= FREE_MONTHLY_LIMIT) {
       return NextResponse.json(
         {

@@ -40,7 +40,6 @@ export default function UploadPage() {
   const [showConsentModal, setShowConsentModal] = useState(false);
 
   // Pro Options States
-  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
   const [usePriority, setUsePriority] = useState(true);
   const [detailLevel, setDetailLevel] = useState<"brief" | "normal" | "detailed">("normal");
   const [customCategory, setCustomCategory] = useState("");
@@ -194,15 +193,10 @@ export default function UploadPage() {
     setLoading(true);
     setError(null);
     
-    // 로딩 최소 유지 시간 설정 (텍스트 5초, 이미지/PDF 10초)
-    const minLoadingTime = activeTab === "text" ? 5000 : 10000;
-    const startTime = Date.now();
-
     try {
       let body: Record<string, unknown>;
 
       const options = isPro ? {
-        model: selectedModel,
         usePriority,
         detailLevel,
         customCategory: customCategory.trim() || undefined,
@@ -292,14 +286,6 @@ export default function UploadPage() {
           : "파싱 중 알 수 없는 오류가 발생했습니다."
       );
     } finally {
-      // 최소 로딩 시간 보장
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-      
-      if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
-      }
-      
       setLoading(false);
       fetchUsage(); // Refresh usage after parsing
     }
@@ -570,20 +556,7 @@ export default function UploadPage() {
               {!isPro && <span className={styles.proBadge}>PRO</span>}
             </header>
             <div className={styles.proOptionsList}>
-              <div className={styles.proOption}>
-                <div style={{ width: '100%' }}>
-                  <div className={styles.proOptionLabel}>AI 모델</div>
-                  <select
-                    className={styles.proOptionSelect}
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    disabled={!isPro}
-                  >
-                    <option value="gpt-4o-mini">GPT-4o mini (빠름)</option>
-                    <option value="gpt-5-mini">GPT-5 mini (강력함)</option>
-                  </select>
-                </div>
-              </div>
+              {/* AI 모델 선택 삭제됨 */}
 
               <div className={styles.proOption}>
                 <div>

@@ -103,69 +103,76 @@ export async function parseToActionPlan(
     detailLevel?: "brief" | "normal" | "detailed";
   }
 ): Promise<ActionPlan> {
-  let modelToUse = options?.model || "gpt-4o-mini";
-  if (modelToUse === "gpt-5-mini") {
-    modelToUse = "gpt-4o"; // 가용한 최상위 모델로 임시 매핑
-  }
+  const modelToUse = options?.model || "gpt-4o-mini";
   const systemPrompt = getSystemPrompt();
 
-  // Pro 옵션을 프롬프트에 동적으로 추가
   let enhancedPrompt = systemPrompt;
   if (options) {
     if (options.customCategory) {
-      enhancedPrompt += `\n\n## Custom Constraint: Category
-The user has specifically requested the category: "${options.customCategory}". If the document content at all fits this category, prioritize using it.`;
+      enhancedPrompt += `\n\n## Custom Constraint: Category\nThe user has specifically requested the category: "${options.customCategory}". If the document content at all fits this category, prioritize using it.`;
     }
 
     if (options.usePriority === false) {
-      enhancedPrompt += `\n\n## Custom Constraint: Priority
-Do NOT assign specific priorities. Set all priorities to "medium".`;
+      enhancedPrompt += `\n\n## Custom Constraint: Priority\nDo NOT assign specific priorities. Set all priorities to "medium".`;
     }
 
     if (options.detailLevel === "brief") {
-      enhancedPrompt += `\n\n## Custom Constraint: Detail Level
-Generate only the most essential 3-5 high-level action items. Do not over-decompose.`;
+      enhancedPrompt += `\n\n## Custom Constraint: Detail Level\nGenerate only the most essential 3-5 high-level action items. Do not over-decompose.`;
     } else if (options.detailLevel === "detailed") {
-      enhancedPrompt += `\n\n## Custom Constraint: Detail Level
-Decompose tasks into the most granular level possible. Include every minor preparation and follow-up step.`;
+      enhancedPrompt += `\n\n## Custom Constraint: Detail Level\nDecompose tasks into the most granular level possible. Include every minor preparation and follow-up step.`;
     }
   }
 
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: enhancedPrompt },
-  ];
-
   const userMessage =
     content.type === "pdf"
-      ? `Extract action plan from this PDF text:\n\n${content.text}`
-      : `Extract action plan from this text:\n\n${content.text}`;
-  messages.push({ role: "user", content: userMessage });
+      ? `Extract action plan from this PDF text and return valid JSON:\n\n${content.text}`
+      : `Extract action plan from this text and return valid JSON:\n\n${content.text}`;
 
   const openai = getOpenAI();
-  const completion = await openai.chat.completions.create({
-    model: modelToUse,
-    messages,
-    response_format: { type: "json_object" },
-    max_tokens: 2048,
-    temperature: 0.2,
-  });
+  console.log(`[OpenAI] Requesting via Chat Completions (Model: ${modelToUse})`);
 
-  const raw = completion.choices[0]?.message?.content;
+  let raw: string | null | undefined;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: modelToUse,
+      messages: [
+        { role: "system", content: enhancedPrompt },
+        { role: "user", content: userMessage },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 2048,
+      temperature: 0.2,
+    });
+    raw = completion.choices[0]?.message?.content;
+  } catch (apiErr: any) {
+    console.error("[OpenAI] API Error:", apiErr);
+    throw new Error(`OpenAI 통신 중 오류가 발생했습니다: ${apiErr.message}`);
+  }
+
   if (!raw || typeof raw !== "string") {
-    throw new Error("Empty or invalid response from OpenAI");
+    console.error("[OpenAI] Raw output is empty or not a string.");
+    throw new Error("OpenAI로부터 유효한 응답을 받지 못했습니다.");
+  }
+
+  // JSON 추출 및 정제 로직
+  let cleanedRaw = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+  const jsonMatch = cleanedRaw.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    cleanedRaw = jsonMatch[0];
   }
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error("OpenAI did not return valid JSON");
+    parsed = JSON.parse(cleanedRaw);
+  } catch (parseErr) {
+    console.error("[OpenAI] JSON Parse Failed. Full content:", cleanedRaw);
+    throw new Error("AI 응답을 데이터로 변환하는 데 실패했습니다.");
   }
 
-  // customCategory 강제 적용 (AI가 실수할 경우 대비)
+  // 검증 및 후처리
   const validated = validateActionPlan(parsed);
   if (options?.customCategory && (options.customCategory as any) !== "기타") {
-    // DocumentCategory 타입인지 확인하는 로직이 필요할 수 있지만, 일단 할당
     validated.category = options.customCategory as any;
   }
 
