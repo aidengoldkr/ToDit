@@ -7,6 +7,8 @@ import Link from "next/link";
 import { readStoredActionPlan, writeStoredActionPlan } from "@/lib/action-plan-session";
 import type { ActionPlan } from "@/types";
 import styles from "./page.module.css";
+import GoogleAd from "@/components/GoogleAd";
+
 
 interface UserUsage {
   count: number;
@@ -168,12 +170,7 @@ export default function DashboardHomePage() {
                   <span className={styles.adBadge}>ADVERTISEMENT</span>
                 </div>
                 <div className={styles.adContent}>
-                  <div className={styles.adPlaceholder}>
-                    <p>문의사항은 메일로 연락주세요</p>
-                    <a href="mailto:contact@aidengoldkr.dev" className={styles.adLink}>
-                      contact@aidengoldkr.dev
-                    </a>
-                  </div>
+                  <GoogleAd slot="1035326864" format="auto" />
                 </div>
               </div>
             )}

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "../styles/globals.css";
 import Providers from "./providers";
 import Navbar from "../components/Navbar";
@@ -52,11 +53,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
+        <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9143389587385709"
           crossOrigin="anonymous"
-        ></script>
+          strategy="afterInteractive"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

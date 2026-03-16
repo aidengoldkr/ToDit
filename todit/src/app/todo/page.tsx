@@ -8,6 +8,8 @@ import styles from "./page.module.css";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { SiGooglecalendar } from "react-icons/si";
+import GoogleAd from "@/components/GoogleAd";
+
 
 function TodoContent() {
   const router = useRouter();
@@ -458,6 +460,11 @@ function TodoContent() {
                 <button className={styles.addBtn} onClick={handleAddAction}>+ 새로운 할 일 추가</button>
               )}
             </div>
+            {!isPro && (
+              <div style={{ marginTop: "40px" }}>
+                <GoogleAd slot="6096081852" format="horizontal" />
+              </div>
+            )}
           </section>
         </main>
 

@@ -8,8 +8,12 @@ import styles from "./Navbar.module.css";
 import { TiAdjustContrast } from "react-icons/ti";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isDark, setIsDark] = useState(false);
+
+  const handleLogin = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
 
   useEffect(() => {
     // Check initial dark mode state
@@ -31,23 +35,24 @@ export default function Navbar() {
   return (
     <nav className={styles.navbar}>
       <div className={styles.leftSection}>
-        <Link href="/" className={styles.logo}>
+        <Link href={status === "authenticated" ? "/dashboard" : "/"} className={styles.logo}>
           To<span style={{ color: "var(--accent)" }}>Dit</span>
         </Link>
       </div>
 
       <div className={styles.rightSection}>
-        {session?.user ? (
+        {status === "authenticated" && session ? (
           <div className={styles.account}>
             <div className={styles.avatar}>
-              {session.user.image ? (
+              {session.user?.image ? (
                 <img src={session.user.image} alt={session.user.name || "User"} />
               ) : (
-                <span>{session.user.name?.[0] || "U"}</span>
+                <span>{session.user?.name?.[0] || "U"}</span>
               )}
             </div>
-            <span className={styles.userName}>{session.user.name}</span>
+            <span className={styles.userName}>{session.user?.name}</span>
             <button
+              type="button"
               onClick={() => {
                 clearStoredActionPlan();
                 signOut({ callbackUrl: "/" });
@@ -59,8 +64,13 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <button onClick={() => signIn("google", { callbackUrl: "/dashboard" })} className={styles.btn}>
-            로그인
+          <button 
+            type="button" 
+            onClick={handleLogin} 
+            className={styles.btn}
+            disabled={status === "loading"}
+          >
+            {status === "loading" ? "..." : "로그인"}
           </button>
         )}
 

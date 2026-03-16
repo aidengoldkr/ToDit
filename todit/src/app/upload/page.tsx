@@ -13,6 +13,8 @@ import {
 import type { ActionPlan } from "@/types";
 
 import styles from "./page.module.css";
+import GoogleAd from "@/components/GoogleAd";
+
 
 type InputMode = "text" | "image" | "pdf";
 
@@ -357,7 +359,7 @@ export default function UploadPage() {
                 <span className={styles.loadingAdBadge}>ADVERTISEMENT</span>
                 {/* Google AdSense Area */}
                 <div className={styles.adContentArea}>
-                  <p className={styles.adPlaceholder}>광고 서비스 준비 중입니다...</p>
+                  <GoogleAd slot="1035326864" format="rectangle" style={{ width: '100%', height: '250px' }} />
                   <p className={styles.adTimerSnippet}>{activeTab === 'text' ? '5초' : '10초'} 후 분석 결과가 나타납니다.</p>
                 </div>
                 <div className={styles.proCtaLink}>
@@ -495,9 +497,7 @@ export default function UploadPage() {
           {!isPro && (
             <div className={styles.adBanner} style={{ marginTop: "16px" }}>
               <div className={styles.adTitle}>ADVERTISEMENT</div>
-              <div className={styles.adContent} style={{ fontSize: "13px" }}>
-                Pro로 업그레이드하고 광고 없이 더 많은 기능을 이용하세요!
-              </div>
+              <GoogleAd slot="6096081852" format="horizontal" />
             </div>
           )}
         </div>
