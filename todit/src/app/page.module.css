@@ -6,17 +6,20 @@
 
 .hero {
   position: relative;
-  padding: 120px 24px 80px;
+  padding: 100px 24px 80px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  max-width: 1200px;
+  justify-content: space-between;
+  gap: 80px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 
 .heroContent {
-  max-width: 800px;
+  flex: 1;
+  max-width: 580px;
+  text-align: left;
+  margin-bottom: 20px;
   z-index: 2;
 }
 
@@ -33,31 +36,33 @@
 }
 
 .title {
-  font-size: clamp(40px, 8vw, 72px);
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 100;
+  line-height: 1.15;
   color: var(--text);
-  margin-bottom: 24px;
-  letter-spacing: -0.02em;
+  margin-bottom: 32px;
+  letter-spacing: -0.03em;
   animation: fadeInUp 1s ease-out;
 }
 
 .title span {
   color: var(--accent);
+  font-weight: 800;
 }
 
 .subtitle {
-  font-size: clamp(18px, 3vw, 22px);
+  font-size: clamp(16px, 2vw, 19px);
   color: var(--muted);
-  line-height: 1.5;
-  margin-bottom: 40px;
+  line-height: 1.7;
+  margin-bottom: 48px;
   animation: fadeInUp 1.2s ease-out;
+  word-break: keep-all;
 }
 
 .ctaGroup {
   display: flex;
   gap: 16px;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
   animation: fadeInUp 1.4s ease-out;
 }
@@ -96,36 +101,16 @@
   background: var(--surface-soft);
 }
 
-.visualContainer {
-  margin-top: 60px;
-  width: 100%;
-  max-width: 1000px;
+.visualSection {
+  flex: 1.3;
   position: relative;
   display: flex;
   justify-content: center;
-  animation: fadeInUp 1.6s ease-out;
+  animation: fadeInRight 1.6s ease-out;
+  perspective: 1000px;
 }
 
-.heroImage {
-  width: 100%;
-  height: auto;
-  border-radius: 24px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border);
-}
 
-/* Float Glow Effect */
-.glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 150%;
-  height: 150%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0) 70%);
-  z-index: -1;
-  pointer-events: none;
-}
 
 /* Features */
 .features {
@@ -176,6 +161,177 @@
   line-height: 1.6;
 }
 
+/* Comparison / Diff Section (Redesigned) */
+.diffSection {
+  padding: 120px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.diffHeader {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.diffTitle {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 900;
+  margin-bottom: 20px;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+
+.diffSubtitle {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.diffFlow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  position: relative;
+}
+
+.diffCard {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  padding: 40px;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.otherCard {
+  opacity: 0.6;
+  background: var(--surface-soft);
+}
+
+.toditCard {
+  border: 2px solid var(--accent);
+  box-shadow: 0 40px 80px rgba(16, 185, 129, 0.12);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.cardTag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: var(--border);
+  color: var(--muted);
+}
+
+.toditCard .cardTag {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.cardInstruction {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.instructionBox {
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 40px;
+}
+
+.contentBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatPreview {
+  padding: 20px;
+  background: var(--bg);
+  border-radius: 4px 24px 24px 24px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-soft);
+  position: relative;
+}
+
+.chatPreview::after {
+  content: "...";
+  display: block;
+  margin-top: 8px;
+  opacity: 0.5;
+}
+
+.actionPlan {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.planItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.planItem span {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.flowArrow {
+  font-size: 32px;
+  color: var(--accent);
+  opacity: 0.5;
+}
+
+@media (max-width: 968px) {
+  .diffFlow {
+    flex-direction: column;
+    gap: 40px;
+  }
+  .toditCard {
+    transform: none;
+  }
+  .flowArrow {
+    transform: rotate(90deg);
+  }
+  .diffCard {
+    height: auto;
+    width: 100%;
+  }
+}
+
 /* Simple Footer */
 .footer {
   padding: 60px 24px;
@@ -190,20 +346,307 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* Pricing Section */
+.pricing {
+  padding: 100px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pricingHeader {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.pricingTitle {
+  font-size: 38px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.pricingSubtitle {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-bottom: 80px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+.proCard {
+  border: 2px solid var(--accent);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--accent-soft) 100%);
+}
+
+.planHeader {
+  margin-bottom: 32px;
+}
+
+.planName {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.price {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.price span {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.planDesc {
+  font-size: 15px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.planFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 40px 0;
+  flex-grow: 1;
+}
+
+.planFeature,
+.planFeatureDisabled {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.planFeatureDisabled {
+  color: var(--muted);
+}
+
+.check {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.checkPro {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.cross {
+  color: var(--muted);
+  font-weight: bold;
+}
+
+.planBtn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.planBtn:hover {
+  background: var(--border);
+}
+
+.proBtn {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.proBtn:hover {
+  background: #3a4ab1;
+  transform: scale(1.02);
+}
+
+/* FAQ Section */
+.faq {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px 100px 24px;
+}
+
+.faqTitle {
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 56px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.faqGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faqItem {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.faqQuestion {
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  gap: 16px;
+}
+
+.faqQuestion:hover {
+  background: var(--surface-soft);
+}
+
+.chevron {
+  font-size: 20px;
+  color: var(--muted);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.chevronActive {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.faqAnswer {
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface);
+}
+
+.faqAnswerShow {
+  max-height: 500px;
+  /* 충분히 큰 값 */
+  border-top: 1px solid var(--border);
+}
+
+.answerContent {
+  padding: 24px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding-top: 80px;
+    gap: 60px;
+  }
+
+  .heroContent {
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .ctaGroup {
+    justify-content: center;
+  }
+
+  .visualSection {
+    width: 100%;
+    flex: none;
+    perspective: none;
+  }
+
+  .mockCard {
+    transform: none;
+    margin: 0 auto;
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
-    padding-top: 80px;
+    flex-direction: column;
+    text-align: center;
+    padding: 80px 24px 0 24px;
+
+    gap: 60px;
   }
+
+  .visualSection {
+    display: none;
+  }
+
   .title {
     font-size: 36px;
   }
-  .visualContainer {
-    margin-top: 40px;
+
+  .pricingTitle {
+    font-size: 28px;
+  }
+
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px) rotateY(-20deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) rotateY(-10deg);
   }
 }

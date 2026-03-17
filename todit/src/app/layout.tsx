@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://todit.app'),
   title: "투딧 | ToDit",
   description: "사진 한 장으로, 나만의 맞춤형 To-Do 생성",
+  keywords: ["투딧", "ToDit", "To-Do", "할일", "할일관리", "할일생성", "할일추천", "할일목록", "할일추천", "할일추천", "할일추천"],
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",

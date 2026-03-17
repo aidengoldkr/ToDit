@@ -1,0 +1,298 @@
+.mockCard {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 12;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: rotateY(-15deg) rotateX(8deg) translateY(-20px);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.mockCard:hover {
+  transform: rotateY(0deg) rotateX(0deg) translateY(-30px);
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.15);
+}
+
+.mockHeader {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff5f56;
+}
+
+.mockDot:nth-child(2) {
+  background: #ffbd2e;
+}
+
+.mockDot:nth-child(3) {
+  background: #27c93f;
+}
+
+.mockScrollArea {
+  background: var(--bg);
+  flex: 1;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.mockAppHeader {
+  padding: 24px 20px 16px;
+}
+
+.mockTopBadge {
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 4px 10px;
+  border-radius: 99px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.mockAppTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.mockAppTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mockAppTag {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.mockLayout {
+  display: flex;
+  padding: 0 24px 32px;
+  gap: 24px;
+}
+
+.mockMain {
+  flex: 1.6;
+}
+
+.mockSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mockSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mockSortGroup {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-soft);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.mockSortBtn {
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mockActiveSort {
+  background: var(--accent);
+  color: #fff;
+}
+
+.mockTodoList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mockTodoItem {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.3s;
+  animation: slideInLeft 0.5s ease forwards;
+  opacity: 0;
+}
+
+.mockTodoItem:nth-child(1) {
+  animation-delay: 1.8s;
+}
+
+.mockTodoItem:nth-child(2) {
+  animation-delay: 2.0s;
+}
+
+.mockTodoItem:nth-child(3) {
+  animation-delay: 2.2s;
+}
+
+.mockTodoItem:nth-child(4) {
+  animation-delay: 2.4s;
+}
+
+.mockTodoItem:nth-child(5) {
+  animation-delay: 2.6s;
+}
+
+.mockTodoItem:hover {
+  border-color: var(--accent);
+}
+
+.mockCheck {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.mockCheckDone {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.mockTodoContent {
+  flex: 1;
+}
+
+.mockTodoTitle {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.mockTodoMeta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mockMetaDate {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.mockBadge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.mockBadgeHigh {
+  background: var(--danger-soft);
+  color: #b91c1c;
+}
+
+.mockBadgeMedium {
+  background: var(--warning-soft);
+  color: #92400e;
+}
+
+.mockBadgeLow {
+  background: var(--success-soft);
+  color: var(--accent);
+}
+
+.mockCalendarLink {
+  font-size: 7px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.mockSidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mockSideTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mockSideCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.mockCardHeader {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.mockCardText {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.mockCardList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mockCardList li {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

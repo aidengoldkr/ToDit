@@ -335,15 +335,15 @@ function TodoContent() {
               <div className={styles.todoSectionTitle}>To-Do</div>
               {isPro && !isEditing && (
                 <div className={styles.sortControls}>
-                  <button 
+                  <button
                     className={`${styles.sortBtn} ${sortBy === "none" ? styles.activeSort : ""}`}
                     onClick={() => setSortBy("none")}
                   >서순</button>
-                  <button 
+                  <button
                     className={`${styles.sortBtn} ${sortBy === "date" ? styles.activeSort : ""}`}
                     onClick={() => setSortBy("date")}
                   >날짜순</button>
-                  <button 
+                  <button
                     className={`${styles.sortBtn} ${sortBy === "priority" ? styles.activeSort : ""}`}
                     onClick={() => setSortBy("priority")}
                   >우선순위</button>
@@ -454,7 +454,7 @@ function TodoContent() {
                   );
                 })
               ) : (
-                <p style={{ color: "var(--muted)", fontSize: "14px" }}>Action Item이 추출되지 않았습니다.</p>
+                <p style={{ color: "var(--muted)", fontSize: "14px" }}>To-Do List가 추출되지 않았습니다.</p>
               )}
               {isEditing && (
                 <button className={styles.addBtn} onClick={handleAddAction}>+ 새로운 할 일 추가</button>

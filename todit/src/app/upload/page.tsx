@@ -161,6 +161,10 @@ export default function UploadPage() {
       }
       setImageFiles(newFiles);
     } else {
+      if (!isPro) {
+        setError("PDF 분석은 Pro 플랜 전용 기능입니다.");
+        return;
+      }
       const validPdf = files.find(f => f.type === 'application/pdf');
       if (validPdf) {
         setPdfFile(validPdf);
@@ -179,6 +183,9 @@ export default function UploadPage() {
   };
 
   async function uploadToSignedUrl(file: File, uploadUrl: string) {
+    if (file.type === 'application/pdf' && !isPro) {
+      throw new Error("PDF 분석은 Pro 플랜 전용 기능입니다.");
+    }
     const response = await fetch(uploadUrl, {
       method: 'PUT',
       body: file,
@@ -395,9 +402,14 @@ export default function UploadPage() {
               </button>
               <button
                 className={`${styles.tab} ${activeTab === 'pdf' ? styles.tabActive : ''}`}
-                onClick={() => resetInputs('pdf')}
+                onClick={() => {
+                  if (!isPro) {
+                    setError("PDF 분석은 Pro 플랜 전용 기능입니다.");
+                  }
+                  resetInputs('pdf');
+                }}
               >
-                문서 (PDF)
+                문서 (PDF) {!isPro && <span style={{ fontSize: '10px', color: 'var(--accent)', marginLeft: '4px' }}>PRO</span>}
               </button>
               <button
                 className={`${styles.tab} ${activeTab === 'text' ? styles.tabActive : ''}`}
