@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
+import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
+import { createStartClickHandler } from "@/lib/in-app";
 
 import {
   readStoredActionPlan,
@@ -28,6 +29,11 @@ interface UserUsage {
 export default function UploadPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { openModal } = useIosKakaoModal();
+
+  const handleLogin = createStartClickHandler(() => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  }, openModal);
 
   const [activeTab, setActiveTab] = useState<InputMode>('image');
   const [text, setText] = useState("");
@@ -315,10 +321,7 @@ export default function UploadPage() {
           <h2>로그인이 필요합니다</h2>
           <button
             className={styles.generateButton}
-            onClick={() => {
-              if (handleInAppBrowserRedirection()) return;
-              signIn("google", { callbackUrl: "/dashboard" });
-            }}
+            onClick={() => handleLogin()}
             style={{ marginTop: "20px" }}
           >
             Google로 로그인

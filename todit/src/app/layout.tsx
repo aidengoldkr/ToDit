@@ -4,6 +4,7 @@ import "../styles/globals.css";
 import Providers from "./providers";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import InAppRedirectHandler from "@/components/InAppRedirectHandler";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://todit.app'),
@@ -75,6 +76,7 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>
+          <InAppRedirectHandler />
           <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", width: "100%", overflowX: "hidden" }}>
             <Navbar />
             <main style={{ flex: 1, width: "100%" }}>{children}</main>

@@ -7,17 +7,16 @@ import { HiOutlineLightningBolt, HiOutlineSparkles, HiOutlineCollection, HiChevr
 import { useState } from "react";
 import MockUI from "@/components/MockUI";
 
-import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
+import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
+import { createStartClickHandler } from "@/lib/in-app";
 
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const { openModal } = useIosKakaoModal();
 
-  const handleLogin = () => {
-    if (handleInAppBrowserRedirection()) {
-      return;
-    }
+  const handleLogin = createStartClickHandler(() => {
     signIn("google", { callbackUrl: "/dashboard" });
-  };
+  }, openModal);
 
   const faqs = [
     {

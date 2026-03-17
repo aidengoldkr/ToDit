@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
+import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
+import { createStartClickHandler } from "@/lib/in-app";
 import Link from "next/link";
 import { readStoredActionPlan, writeStoredActionPlan } from "@/lib/action-plan-session";
 import type { ActionPlan } from "@/types";
@@ -27,6 +28,11 @@ interface SavedPlan {
 export default function DashboardHomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { openModal } = useIosKakaoModal();
+
+  const handleLogin = createStartClickHandler(() => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  }, openModal);
 
   const [lastPlan, setLastPlan] = useState<SavedPlan | null>(null);
   const [historyPlans, setHistoryPlans] = useState<SavedPlan[]>([]);
@@ -110,10 +116,7 @@ export default function DashboardHomePage() {
           <h2>로그인이 필요합니다</h2>
           <button
             className={styles.authButton}
-            onClick={() => {
-              if (handleInAppBrowserRedirection()) return;
-              signIn("google", { callbackUrl: "/dashboard" });
-            }}
+            onClick={() => handleLogin()}
           >
             Google로 계속하기
           </button>

@@ -7,18 +7,17 @@ import { clearStoredActionPlan } from "@/lib/action-plan-session";
 import styles from "./Navbar.module.css";
 import { TiAdjustContrast } from "react-icons/ti";
 
-import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
+import { useIosKakaoModal } from "./IosKakaoModalProvider";
+import { createStartClickHandler } from "@/lib/in-app";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const [isDark, setIsDark] = useState(false);
+  const { openModal } = useIosKakaoModal();
 
-  const handleLogin = () => {
-    if (handleInAppBrowserRedirection()) {
-      return;
-    }
+  const handleLogin = createStartClickHandler(() => {
     signIn("google", { callbackUrl: "/dashboard" });
-  };
+  }, openModal);
 
   useEffect(() => {
     // Check initial dark mode state
