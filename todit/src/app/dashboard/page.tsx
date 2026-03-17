@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
 import Link from "next/link";
 import { readStoredActionPlan, writeStoredActionPlan } from "@/lib/action-plan-session";
 import type { ActionPlan } from "@/types";
@@ -109,7 +110,10 @@ export default function DashboardHomePage() {
           <h2>로그인이 필요합니다</h2>
           <button
             className={styles.authButton}
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => {
+              if (handleInAppBrowserRedirection()) return;
+              signIn("google", { callbackUrl: "/dashboard" });
+            }}
           >
             Google로 계속하기
           </button>

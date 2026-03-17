@@ -7,10 +7,15 @@ import { HiOutlineLightningBolt, HiOutlineSparkles, HiOutlineCollection, HiChevr
 import { useState } from "react";
 import MockUI from "@/components/MockUI";
 
+import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
+
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const handleLogin = () => {
+    if (handleInAppBrowserRedirection()) {
+      return;
+    }
     signIn("google", { callbackUrl: "/dashboard" });
   };
 

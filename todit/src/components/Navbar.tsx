@@ -7,11 +7,16 @@ import { clearStoredActionPlan } from "@/lib/action-plan-session";
 import styles from "./Navbar.module.css";
 import { TiAdjustContrast } from "react-icons/ti";
 
+import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
+
 export default function Navbar() {
   const { data: session, status } = useSession();
   const [isDark, setIsDark] = useState(false);
 
   const handleLogin = () => {
+    if (handleInAppBrowserRedirection()) {
+      return;
+    }
     signIn("google", { callbackUrl: "/dashboard" });
   };
 

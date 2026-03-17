@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { handleInAppBrowserRedirection } from "@/utils/inAppBrowser";
 
 import {
   readStoredActionPlan,
@@ -314,7 +315,10 @@ export default function UploadPage() {
           <h2>로그인이 필요합니다</h2>
           <button
             className={styles.generateButton}
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => {
+              if (handleInAppBrowserRedirection()) return;
+              signIn("google", { callbackUrl: "/dashboard" });
+            }}
             style={{ marginTop: "20px" }}
           >
             Google로 로그인
