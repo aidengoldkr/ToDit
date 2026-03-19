@@ -8,9 +8,9 @@ import InAppRedirectHandler from "@/components/InAppRedirectHandler";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://todit.app'),
-  title: "투딧 | ToDit",
-  description: "사진 한 장으로, 나만의 맞춤형 To-Do 생성",
-  keywords: ["투딧", "ToDit", "To-Do", "할일", "할일관리", "할일생성", "할일추천", "할일목록", "할일추천", "할일추천", "할일추천"],
+  title: "투딧 - ToDit | 사진 한 장으로 끝내는, 맞춤형 To-Do 생성",
+  description: "사진 한 장으로 끝내는, 맞춤형 To-Do 생성",
+  keywords: ["투딧", "ToDit", "To-Do", "할일", "할일관리", "할일생성", "할일추천", "할일목록", "이미지 todo", "수행평가 todo", "학교생활 todo", "업무 todo", "이미지 todo", "이미지 투두", "사진으로 계획", "수행평가 계획", "자동 일정 생성기"],
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "투딧 | ToDit",
-    description: "사진 한 장으로, 나만의 맞춤형 To-Do 생성",
+    description: "사진 한 장으로 끝내는, 맞춤형 To-Do 생성",
     url: "https://todit.app",
     siteName: "ToDit",
     images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         url: "/OG.png",
         width: 1200,
         height: 630,
-        alt: "사진 한 장으로, 나만의 맞춤형 To-Do 생성",
+        alt: "사진 한 장으로 끝내는, 맞춤형 To-Do 생성",
       },
     ],
     locale: "ko_KR",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "투딧 | ToDit",
-    description: "사진 한 장으로, 나만의 맞춤형 To-Do 생성",
+    description: "사진 한 장으로 끝내는, 맞춤형 To-Do 생성",
     images: ["/OG.png"],
   },
 };
