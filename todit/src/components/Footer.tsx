@@ -44,10 +44,9 @@ export default function Footer() {
             <span className={styles.divider}>|</span>
             <span>문의 : contact@aidengoldkr.dev</span>
           </div>
-          <div className={styles.infoRow}>
-            <span>서비스 제공 기간 : 월 정기 구독 - 결제일로부터 1개월(30일) 이용 후 자동 갱신 / 매월 동일한 날짜에 자동 결제</span>
-          </div>
         </div>
+
+
 
         <div className={styles.bottom}>
           <p>© Aiden Development. All Rights Reserved.</p>

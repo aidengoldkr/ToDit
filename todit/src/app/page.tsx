@@ -48,6 +48,10 @@ export default function Home() {
     {
       q: "PG사 입점 대기 중인 이유가 무엇인가요?",
       a: "ToDit의 개발자가 고등학생인 관계로, 사업자 등록 및 PG 심사 승인 절차에 일반적인 경우보다 시간이 조금 더 소요되고 있습니다. 현재 Pro 플랜은 테스트 모드로 제공 중이며, 정식 출시 전까지 모든 기능을 자유롭게 경험해 보실 수 있습니다."
+    },
+    {
+      q: "서비스 제공 기간은 어떻게 되나요?",
+      a: "월 정기 구독 상품이며, 결제일로부터 1개월(30일) 이용 후 자동 갱신됩니다. 매월 동일한 날짜에 자동 결제가 진행됩니다."
     }
   ];
 
@@ -248,11 +252,8 @@ export default function Home() {
             </button>
           </div>
         </div>
-
-        <div className={styles.serviceInfo}>
-          * 서비스 제공 기간 : 월 정기 구독 - 결제일로부터 1개월(30일) 이용 후 자동 갱신 / 매월 동일한 날짜에 자동 결제
-        </div>
       </section>
+
 
       {/* FAQ Section */}
       <section className={styles.faq}>
