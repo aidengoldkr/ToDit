@@ -5,6 +5,7 @@ import Image from "next/image";
 import styles from "./page.module.css";
 import { HiOutlineLightningBolt, HiOutlineSparkles, HiOutlineCollection, HiChevronDown } from "react-icons/hi";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import MockUI from "@/components/MockUI";
 
 import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
@@ -13,9 +14,10 @@ import { createStartClickHandler } from "@/lib/in-app";
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const { openModal } = useIosKakaoModal();
+  const router = useRouter();
 
   const handleLogin = createStartClickHandler(() => {
-    signIn("google", { callbackUrl: "/dashboard" });
+    router.push("/auth/signin");
   }, openModal);
 
   const faqs = [
@@ -245,6 +247,10 @@ export default function Home() {
               Pro로 업그레이드
             </button>
           </div>
+        </div>
+
+        <div className={styles.serviceInfo}>
+          * 서비스 제공 기간 : 월 정기 구독 - 결제일로부터 1개월(30일) 이용 후 자동 갱신 / 매월 동일한 날짜에 자동 결제
         </div>
       </section>
 

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { clearStoredActionPlan } from "@/lib/action-plan-session";
 import styles from "./Navbar.module.css";
 import { TiAdjustContrast } from "react-icons/ti";
@@ -14,9 +15,10 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [isDark, setIsDark] = useState(false);
   const { openModal } = useIosKakaoModal();
+  const router = useRouter();
 
   const handleLogin = createStartClickHandler(() => {
-    signIn("google", { callbackUrl: "/dashboard" });
+    router.push("/auth/signin");
   }, openModal);
 
   useEffect(() => {

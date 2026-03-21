@@ -650,3 +650,12 @@
     transform: translateX(0) rotateY(-10deg);
   }
 }
+
+.serviceInfo {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: -40px;
+  margin-bottom: 60px;
+  line-height: 1.6;
+}

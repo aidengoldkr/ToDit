@@ -21,16 +21,16 @@ export async function getOrResetUsage(
   const limit = tier === "pro" ? null : FREE_MONTHLY_LIMIT;
 
   const { data: existing } = await supabase
-    .from("user_usage")
+    .from("users")
     .select("balance, last_refill_at")
-    .eq("user_id", userId)
+    .eq("id", userId)
     .single();
 
   const now = new Date();
   const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const namePayload =
     displayName != null && displayName !== ""
-      ? { display_name: displayName }
+      ? { name: displayName }
       : {};
 
   if (existing) {
@@ -42,22 +42,22 @@ export async function getOrResetUsage(
     // 달이 바뀌었으면 count(balance)를 0으로 초기화
     if (lastMonth && lastMonth < thisMonth) {
       await supabase
-        .from("user_usage")
+        .from("users")
         .update({
           balance: 0,
           last_refill_at: thisMonth,
           updated_at: now.toISOString(),
           ...namePayload,
         })
-        .eq("user_id", userId);
+        .eq("id", userId);
       return { count: 0, limit, last_reset_at: thisMonth };
     }
 
     if (Object.keys(namePayload).length > 0) {
       await supabase
-        .from("user_usage")
+        .from("users")
         .update({ updated_at: now.toISOString(), ...namePayload })
-        .eq("user_id", userId);
+        .eq("id", userId);
     }
 
     return {
@@ -67,13 +67,14 @@ export async function getOrResetUsage(
     };
   }
 
-  // 신규 유저 생성
+  // 신규 유저 생성 (usage.ts 폴백)
   const { data: inserted } = await supabase
-    .from("user_usage")
+    .from("users")
     .insert({
-      user_id: userId,
+      id: userId,
       balance: 0, // 초기 사용량 0
       last_refill_at: thisMonth,
+      provider: "google", // 기존 동작 호환성
       ...namePayload,
     })
     .select("balance, last_refill_at")
@@ -96,38 +97,38 @@ export async function incrementUsage(userId: string): Promise<boolean> {
   if (tier === "pro") {
     // Pro는 카운트만 올리고 제한 체크 안 함 (또는 통계용으로만 유지)
     const { data: row } = await supabase
-      .from("user_usage")
+      .from("users")
       .select("balance")
-      .eq("user_id", userId)
+      .eq("id", userId)
       .single();
 
     await supabase
-      .from("user_usage")
+      .from("users")
       .update({
         balance: (row?.balance ?? 0) + 1,
         updated_at: new Date().toISOString(),
       })
-      .eq("user_id", userId);
+      .eq("id", userId);
     return true;
   }
 
   // Free 사용자 체크
   const { data: row } = await supabase
-    .from("user_usage")
+    .from("users")
     .select("balance")
-    .eq("user_id", userId)
+    .eq("id", userId)
     .single();
 
   const currentCount = row?.balance ?? 0;
   if (currentCount >= FREE_MONTHLY_LIMIT) return false;
 
   const { error } = await supabase
-    .from("user_usage")
+    .from("users")
     .update({
       balance: currentCount + 1,
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", userId);
+    .eq("id", userId);
 
   return !error;
 }

@@ -1,15 +1,26 @@
--- Supabase Schema for ToDit (Updated for NextAuth Google IDs)
+-- Supabase Schema for ToDit
 
--- 1. user_usage table
--- balance: current usage count (monthly)
-CREATE TABLE IF NOT EXISTS public.user_usage (
-  user_id TEXT PRIMARY KEY,
+-- 1. users table (Merged user_usage and custom credentials users)
+CREATE TABLE IF NOT EXISTS public.users (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  
+  -- Auth fields
+  email TEXT UNIQUE,
+  password_hash TEXT,
+  name TEXT,
+  image TEXT,
+  provider TEXT NOT NULL DEFAULT 'credentials',
+  
+  -- Usage fields
   balance INTEGER NOT NULL DEFAULT 0,
   last_refill_at TIMESTAMPTZ DEFAULT NOW(),
-  display_name TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  
+  -- Common fields
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 
 -- 2. user_consents table
 CREATE TABLE IF NOT EXISTS public.user_consents (

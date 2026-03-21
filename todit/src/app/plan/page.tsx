@@ -141,6 +141,10 @@ export default function PlanPage() {
         </div>
       </div>
 
+      <div className={styles.serviceInfo}>
+        * 서비스 제공 기간 : 월 정기 구독 - 결제일로부터 1개월(30일) 이용 후 자동 갱신 / 매월 동일한 날짜에 자동 결제
+      </div>
+
       <section className={styles.faq}>
         <h3 className={styles.faqTitle}>자주 묻는 질문</h3>
         <div className={styles.faqItem}>

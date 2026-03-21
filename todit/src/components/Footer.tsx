@@ -6,7 +6,7 @@ import styles from "./Footer.module.css";
 
 export default function Footer() {
   const pathname = usePathname();
-  const isShowFullFooter = pathname === "/" || pathname === "/dashboard";
+  const isShowFullFooter = pathname === "/" || pathname === "/dashboard" || pathname === "/plan";
 
   if (!isShowFullFooter) {
     return (
@@ -38,11 +38,14 @@ export default function Footer() {
             <span className={styles.divider}>|</span>
             <span>사업자등록번호 : 798-62-00920</span>
             <span className={styles.divider}>|</span>
-            <span>주소 : 경기 남양주시 덕소로 286</span>
+            <span>주소 : 경기도 남양주시 와부읍 덕소로 286, 101동 1601호</span>
             <span className={styles.divider}>|</span>
             <span>Call : 031-576-0329</span>
             <span className={styles.divider}>|</span>
             <span>문의 : contact@aidengoldkr.dev</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>서비스 제공 기간 : 월 정기 구독 - 결제일로부터 1개월(30일) 이용 후 자동 갱신 / 매월 동일한 날짜에 자동 결제</span>
           </div>
         </div>
 
