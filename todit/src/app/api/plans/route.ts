@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "DB Error" }, { status: 500 });
   }
 
+  console.log("Fetching plans for session.user.id:", session.user.id);
+
   let query = supabase
     .from("saved_todo")
     .select("*", { count: "exact" })

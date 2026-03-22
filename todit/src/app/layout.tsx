@@ -61,6 +61,14 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+        <Script
+          src="https://code.jquery.com/jquery-1.12.4.min.js"
+          strategy="beforeInteractive"
+        />
+        <Script
+          src="https://cdn.iamport.kr/v1/iamport.js"
+          strategy="beforeInteractive"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

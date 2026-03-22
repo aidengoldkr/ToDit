@@ -70,21 +70,33 @@ export const authOptions: NextAuthOptions = {
         const supabase = createAdminClient();
         if (!supabase || !user.email) return true;
 
-        // DB에 해당 이메일이 있는지 확인
-        const { data: existingUser } = await supabase
+        // 1. 구글 고유 ID(user.id)로 기존 유저가 있는지 확인 (이메일이 NULL인 경우 대비)
+        const { data: userById } = await supabase
           .from("users")
-          .select("id, provider")
+          .select("id, email, provider")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        // 2. 이메일로 기존 유저가 있는지 확인
+        const { data: userByEmail } = await supabase
+          .from("users")
+          .select("id, email, provider")
           .eq("email", user.email)
-          .single();
+          .maybeSingle();
+
+        // 기존에 숫자 ID로만 존재하고 이메일이 없던 계정이라면 이메일을 채워넣어 줍니다 (데이터 연동성 확보)
+        if (userById && !userById.email && user.email) {
+          await supabase.from("users").update({ email: user.email }).eq("id", user.id);
+        }
+
+        // 우선순위: ID가 일치하는 계정(기본 데이터가 있을 확률이 높음) > 이메일이 일치하는 계정
+        const existingUser = userById || userByEmail;
 
         if (existingUser) {
-          // 자체 회원가입으로 가입한 계정인데 구글로 로그인 시도하는 경우 연동 처리
-          // session 생성을 위해 user.id를 자체 DB의 UUID로 변경
+          // 세션 생성을 위해 user.id를 DB의 실제 ID로 변경 (기존 데이터 연동 유지)
           user.id = existingUser.id;
         } else {
-          // 새로운 구글 로그인 사용자
-          // Google 사용자도 users 테이블에 저장하여 이메일 중복 체크 등에 사용
-          // id는 Google ID (token.sub)를 그대로 사용하여 기존 데이터 연동 유지
+          // 완전히 새로운 구글 사용자
           const { error } = await supabase.from("users").insert({
             id: user.id,
             email: user.email,
@@ -101,9 +113,26 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user }) {
-      // 최초 로그인 시
+      // 최초 로그인 혹은 세션 갱신 시
       if (user) {
-        token.sub = user.id;
+        // 기본적으로 NextAuth에서 제공하는 ID를 사용하되, 
+        // 구글 로그인 등으로 서비스 ID와 충돌이 있을 수 있으므로 DB의 실제 PK(id)로 세션 아이디를 동기화합니다.
+        const supabase = createAdminClient();
+        if (supabase && user.email) {
+          const { data: dbUser } = await supabase
+            .from("users")
+            .select("id")
+            .eq("email", user.email)
+            .single();
+          
+          if (dbUser) {
+            token.sub = dbUser.id; // DB의 실제 'id' 컬럼 값(UUID 또는 기존 ID)을 사용
+          } else {
+            token.sub = user.id;
+          }
+        } else {
+          token.sub = user.id;
+        }
       }
       return token;
     },

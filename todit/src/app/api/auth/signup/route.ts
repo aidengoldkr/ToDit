@@ -26,14 +26,14 @@ export async function POST(req: Request) {
     // 이메일 중복 확인
     const { data: existingUser } = await supabase
       .from("users")
-      .select("id, provider, email_verified_at")
+      .select("id, provider, email")
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       if (existingUser.provider === "google") {
         return NextResponse.json(
-          { message: "이미 Google 계정으로 등록된 이메일입니다." },
+          { message: "이미 Google 계정으로 등록된 이메일입니다. Google 로그인을 이용해주세요." },
           { status: 400 }
         );
       }

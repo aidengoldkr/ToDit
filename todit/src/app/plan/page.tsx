@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
+import { usePayment } from "@/hooks/usePayment";
 
 interface UserUsage {
   count: number;
@@ -15,6 +16,8 @@ export default function PlanPage() {
   const router = useRouter();
   const [usage, setUsage] = useState<UserUsage | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const { requestPayment, isPaymentLoading } = usePayment();
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -34,28 +37,63 @@ export default function PlanPage() {
     }
   }
 
+  const isPro = usage?.limit === null;
+
   const handleUpgrade = async () => {
     if (status !== "authenticated") {
       router.push("/dashboard");
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch("/api/test/toggle-pro", { method: "POST" });
-      if (res.ok) {
-        window.location.reload();
-      } else {
-        alert("업그레이드 처리 중 오류가 발생했습니다.");
+    if (!isPro) {
+      // Free -> Pro: 결제 프로세스 시작
+      const res = await requestPayment({
+        customerName: session.user?.name || "사용자",
+        customerEmail: session.user?.email || "user@todit.app",
+      });
+
+      if (res) {
+        setLoading(true);
+        try {
+          const verifyRes = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              imp_uid: res.imp_uid,
+              merchant_uid: res.merchant_uid,
+            }),
+          });
+
+          if (verifyRes.ok) {
+            alert("Pro 플랜으로 성공적으로 업그레이드되었습니다!");
+            window.location.reload();
+          } else {
+            const errData = await verifyRes.json();
+            alert(`결제 검증 실패: ${errData.error || "알 수 없는 오류"}`);
+          }
+        } catch (e) {
+          alert("결제 검증 중 네트워크 오류가 발생했습니다.");
+        } finally {
+          setLoading(false);
+        }
       }
-    } catch (e) {
-      alert("네트워크 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
+    } else {
+      // Pro -> Free: 현재 테스트 취소 용도로 그대로 사용 (결제 취소 아님)
+      setLoading(true);
+      try {
+        const res = await fetch("/api/test/toggle-pro", { method: "POST" });
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert("업그레이드 해지 중 오류가 발생했습니다.");
+        }
+      } catch (e) {
+        alert("네트워크 오류가 발생했습니다.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
-
-  const isPro = usage?.limit === null;
 
   return (
     <div className={styles.container}>
@@ -133,10 +171,10 @@ export default function PlanPage() {
 
           <button
             className={`${styles.planBtn} ${styles.proBtn}`}
-            onClick={() => isPro ? handleUpgrade() : alert("PG사 입점 대기 중입니다.")}
-            disabled={loading}
+            onClick={handleUpgrade}
+            disabled={loading || isPaymentLoading || isPro}
           >
-            {loading ? "처리 중..." : (isPro ? "구독 관리 (테스트 취소)" : "Pro로 업그레이드")}
+            {loading || isPaymentLoading ? "처리 중..." : (isPro ? "이용 중인 플랜" : "Pro로 업그레이드")}
           </button>
         </div>
       </div>

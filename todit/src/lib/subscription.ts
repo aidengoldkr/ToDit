@@ -27,6 +27,26 @@ export async function getTier(userId: string): Promise<PlanTier> {
   return "pro";
 }
 
+/** 사용자 구독 상태를 활성(Pro)으로 업데이트 */
+export async function activateSubscription(userId: string): Promise<boolean> {
+  const supabase = createAdminClient();
+  if (!supabase) return false;
+
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .upsert({
+      user_id: userId,
+      status: "active",
+      current_period_end: nextMonth.toISOString(),
+      updated_at: now.toISOString(),
+    }, { onConflict: "user_id" });
+
+  return !error;
+}
+
 /** 행동 플랜 생성 가능 개수 (모든 사용자 10개로 제한) */
 export function getPlanLimit(_tier: PlanTier): number {
   return PLAN_LIMIT;
