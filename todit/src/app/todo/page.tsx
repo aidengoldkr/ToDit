@@ -72,7 +72,7 @@ function TodoContent() {
     loadData();
   }, [id, status, session?.user?.id]);
 
-  const toggleAction = (index: number) => {
+  const toggleAction = async (index: number) => {
     if (!result || !session?.user?.id) return;
     const newActions = [...result.actions];
     newActions[index] = {
@@ -80,8 +80,23 @@ function TodoContent() {
       done: !newActions[index].done,
     };
     const newPlan = { ...result, actions: newActions };
+    
+    // UI 우선 업데이트 (Optimistic Update)
     setResult(newPlan);
     writeStoredActionPlan(newPlan, session.user.id);
+
+    // 서버 업데이트
+    if (id) {
+      try {
+        await fetch(`/api/todo/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan: newPlan }),
+        });
+      } catch (e) {
+        console.error("Toggle update failed", e);
+      }
+    }
   };
 
   const handleAddToCalendar = (task: string, dueDate?: string) => {
@@ -133,12 +148,37 @@ function TodoContent() {
     setDraftResult(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (draftResult && session?.user?.id) {
+      const prevResult = result;
       setResult(draftResult);
       writeStoredActionPlan(draftResult, session.user.id);
+      setIsEditing(false);
+
+      if (id) {
+        setLoading(true);
+        try {
+          const res = await fetch(`/api/todo/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ plan: draftResult }),
+          });
+          if (!res.ok) {
+            const data = await res.json();
+            alert(data.error || "수정 사항 저장에 실패했습니다.");
+            setResult(prevResult); // 에러 시 복구
+          }
+        } catch (e) {
+          console.error("Save failed", e);
+          alert("서버와 통신 중 오류가 발생했습니다.");
+          setResult(prevResult); // 에러 시 복구
+        } finally {
+          setLoading(false);
+        }
+      }
+    } else {
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
 
   const handleDelete = async () => {

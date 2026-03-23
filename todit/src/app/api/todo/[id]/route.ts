@@ -84,3 +84,45 @@ export async function DELETE(
 
   return NextResponse.json({ success: true });
 }
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
+  const { id } = params;
+  const idResult = TodoIdSchema.safeParse(id);
+  if (!idResult.success) {
+    return NextResponse.json({ error: "유효한 ID 형식이 아닙니다." }, { status: 400 });
+  }
+
+  try {
+    const { plan } = await request.json();
+    if (!plan) {
+      return NextResponse.json({ error: "수정할 데이터가 없습니다." }, { status: 400 });
+    }
+
+    const supabase = getAuthenticatedClient(session.user.id);
+    const { error } = await supabase
+      .from("saved_todo")
+      .update({ 
+        plan,
+        title: plan.title || "제목 없는 To-Do 플로우", // 검색이나 목록 표시를 위해 제목도 업데이트
+      })
+      .eq("id", id)
+      .eq("user_id", session.user.id);
+
+    if (error) {
+      console.error("Update error:", error);
+      return NextResponse.json({ error: "데이터 수정에 실패했습니다." }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
+  }
+}
