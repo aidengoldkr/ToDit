@@ -16,7 +16,7 @@ export default function PlanPage() {
   const router = useRouter();
   const [usage, setUsage] = useState<UserUsage | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const { requestPayment, isPaymentLoading } = usePayment();
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function PlanPage() {
 
           <ul className={styles.features}>
             <li className={styles.feature}>
-              <span className={styles.check}>✓</span> 월 5회 무료 생성
+              <span className={styles.check}>✓</span> 월 20회 무료 생성
             </li>
             <li className={styles.feature}>
               <span className={styles.check}>✓</span> 기본 AI 모델 사용

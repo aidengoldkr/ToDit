@@ -12,17 +12,17 @@ function SignInForm() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
   const messageParam = searchParams.get("message");
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(
-    errorParam === "CredentialsSignin" ? "이메일 또는 비밀번호가 올바르지 않습니다." : 
-    errorParam === "InvalidToken" ? "유효하지 않거나 만료된 인증 토큰입니다." : ""
+    errorParam === "CredentialsSignin" ? "이메일 또는 비밀번호가 올바르지 않습니다." :
+      errorParam === "InvalidToken" ? "유효하지 않거나 만료된 인증 토큰입니다." : ""
   );
-  
+
   const [message, setMessage] = useState(
     messageParam === "Verified" ? "이메일 인증이 완료되었습니다! 이제 로그인이 가능합니다." :
-    messageParam === "AlreadyVerified" ? "이미 인증이 완료된 계정입니다." : ""
+      messageParam === "AlreadyVerified" ? "이미 인증이 완료된 계정입니다." : ""
   );
 
   const [isLoading, setIsLoading] = useState(false);
@@ -40,11 +40,11 @@ function SignInForm() {
     });
 
     if (res?.error) {
-       setError(res.error);
-       setIsLoading(false);
+      setError(res.error);
+      setIsLoading(false);
     } else {
-       router.push("/dashboard");
-       router.refresh();
+      router.push("/dashboard");
+      router.refresh();
     }
   };
 
@@ -66,24 +66,24 @@ function SignInForm() {
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <label className={styles.label}>이메일</label>
-            <input 
-              type="email" 
-              className={styles.input} 
-              placeholder="example@todit.com"
+            <input
+              type="email"
+              className={styles.input}
+              placeholder="example@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
             />
           </div>
           <div className={styles.inputGroup}>
             <label className={styles.label}>비밀번호</label>
-            <input 
-              type="password" 
-              className={styles.input} 
+            <input
+              type="password"
+              className={styles.input}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
             />
           </div>
           <button type="submit" className={styles.submitBtn} disabled={isLoading}>
@@ -101,7 +101,7 @@ function SignInForm() {
         </button>
 
         <div className={styles.footer}>
-          아직 계정이 없으신가요? 
+          아직 계정이 없으신가요?
           <Link href="/auth/signup" className={styles.link}>
             회원가입
           </Link>
