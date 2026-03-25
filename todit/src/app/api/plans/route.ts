@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
+import { normalizeStoredTodoPlan } from "@/lib/schema";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PaginationSchema } from "@/lib/validators";
 
@@ -13,12 +14,15 @@ export async function GET(request: NextRequest) {
   const params = PaginationSchema.safeParse({
     page: searchParams.get("page") || "1",
     category: searchParams.get("category") || "all",
+    documentType: searchParams.get("documentType") || "all",
     search: searchParams.get("search") || "",
   });
+
   if (!params.success) {
     return NextResponse.json({ error: "잘못된 파라미터입니다." }, { status: 400 });
   }
-  const { page, category, search } = params.data;
+
+  const { page, category, documentType, search } = params.data;
   const pageSize = 10;
 
   const supabase = createAdminClient();
@@ -26,15 +30,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "DB Error" }, { status: 500 });
   }
 
-  console.log("Fetching plans for session.user.id:", session.user.id);
-
   let query = supabase
     .from("saved_todo")
     .select("*", { count: "exact" })
     .eq("user_id", session.user.id);
 
   if (category !== "all" && category !== "") {
-    query = query.eq("plan->>category", category);
+    query = query.eq("category", category);
+  }
+
+  if (documentType !== "all" && documentType !== "") {
+    query = query.eq("document_type", documentType);
   }
 
   if (search) {
@@ -50,9 +56,12 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
-    data: data || [],
+    data: (data || []).map((item) => ({
+      ...item,
+      plan: normalizeStoredTodoPlan(item.plan),
+    })),
     totalCount: count || 0,
     page,
-    pageSize
+    pageSize,
   });
 }

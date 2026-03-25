@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -15,7 +17,6 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/auth/signin?error=DbError", req.url));
     }
 
-    // 토큰으로 사용자 검색
     const { data: user, error: findError } = await supabase
       .from("users")
       .select("id, email_verified_at")
@@ -27,11 +28,9 @@ export async function GET(req: Request) {
     }
 
     if (user.email_verified_at) {
-      // 이미 인증된 경우
       return NextResponse.redirect(new URL("/auth/signin?message=AlreadyVerified", req.url));
     }
 
-    // 인증 처리
     const { error: updateError } = await supabase
       .from("users")
       .update({
@@ -45,7 +44,6 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/auth/signin?error=UpdateError", req.url));
     }
 
-    // 성공 시 로그인 페이지로 이동 (성공 메시지 포함)
     return NextResponse.redirect(new URL("/auth/signin?message=Verified", req.url));
   } catch (error) {
     console.error("Verification exception:", error);

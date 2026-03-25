@@ -1,11 +1,34 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useState, FormEvent, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import styles from "../auth.module.css";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { FormEvent, Suspense, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import styles from "../auth.module.css";
+
+const RESEND_GENERIC_MESSAGE =
+  "If a verification email can be sent, it has been sent.";
+
+function getInitialError(errorParam: string | null) {
+  if (errorParam === "CredentialsSignin") {
+    return "The email or password is incorrect.";
+  }
+  if (errorParam === "InvalidToken") {
+    return "That verification link is invalid or has already been used.";
+  }
+  return "";
+}
+
+function getInitialMessage(messageParam: string | null) {
+  if (messageParam === "Verified") {
+    return "Email verified. You can sign in now.";
+  }
+  if (messageParam === "AlreadyVerified") {
+    return "That account is already verified.";
+  }
+  return "";
+}
 
 function SignInForm() {
   const router = useRouter();
@@ -15,17 +38,13 @@ function SignInForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(
-    errorParam === "CredentialsSignin" ? "이메일 또는 비밀번호가 올바르지 않습니다." :
-      errorParam === "InvalidToken" ? "유효하지 않거나 만료된 인증 토큰입니다." : ""
-  );
-
-  const [message, setMessage] = useState(
-    messageParam === "Verified" ? "이메일 인증이 완료되었습니다! 이제 로그인이 가능합니다." :
-      messageParam === "AlreadyVerified" ? "이미 인증이 완료된 계정입니다." : ""
-  );
-
+  const [error, setError] = useState(getInitialError(errorParam));
+  const [message, setMessage] = useState(getInitialMessage(messageParam));
   const [isLoading, setIsLoading] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
+  const [resendError, setResendError] = useState("");
+  const [isResendLoading, setIsResendLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,24 +59,48 @@ function SignInForm() {
     });
 
     if (res?.error) {
-      setError(res.error);
+      setError(getInitialError(res.error) || res.error);
       setIsLoading(false);
-    } else {
-      router.push("/dashboard");
-      router.refresh();
+      return;
     }
+
+    router.push("/dashboard");
+    router.refresh();
   };
 
   const handleGoogleSignIn = () => {
     signIn("google", { callbackUrl: "/dashboard" });
   };
 
+  const handleResendVerification = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsResendLoading(true);
+    setResendError("");
+    setResendMessage("");
+
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: resendEmail }),
+      });
+
+      setResendMessage(RESEND_GENERIC_MESSAGE);
+    } catch {
+      setResendError("Could not send the request right now. Please try again.");
+    } finally {
+      setIsResendLoading(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1 className={styles.title}>다시 만나서 반가워요</h1>
-          <p className={styles.subtitle}>ToDit으로 스마트하게 할 일을 관리하세요</p>
+          <h1 className={styles.title}>Welcome back</h1>
+          <p className={styles.subtitle}>로그인하고, ToDit에서 할 일을 관리해 보세요.</p>
         </div>
 
         {error && <div className={styles.errorBox}>{error}</div>}
@@ -65,43 +108,45 @@ function SignInForm() {
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
-            <label className={styles.label}>이메일</label>
+            <label className={styles.label}>Email</label>
             <input
               type="email"
               className={styles.input}
               placeholder="example@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
             />
           </div>
           <div className={styles.inputGroup}>
-            <label className={styles.label}>비밀번호</label>
+            <label className={styles.label}>Password</label>
             <input
               type="password"
               className={styles.input}
-              placeholder="••••••••"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
           <button type="submit" className={styles.submitBtn} disabled={isLoading}>
-            {isLoading ? "로그인 중..." : "로그인"}
+            {isLoading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
         <div className={styles.divider}>
-          <span>또는</span>
+          <span>or</span>
         </div>
 
         <button type="button" className={styles.googleBtn} onClick={handleGoogleSignIn}>
           <FcGoogle size={20} />
-          Google로 로그인
+          Continue with Google
         </button>
 
         <div className={styles.footer}>
-          아직 계정이 없으신가요?
+          계정이 없으신가요?
           <Link href="/auth/signup" className={styles.link}>
             회원가입
           </Link>
@@ -113,7 +158,7 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className={styles.container}>로딩 중...</div>}>
+    <Suspense fallback={<div className={styles.container}>Loading...</div>}>
       <SignInForm />
     </Suspense>
   );

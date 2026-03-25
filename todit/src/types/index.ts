@@ -1,7 +1,6 @@
 export type Priority = "high" | "medium" | "low";
 
-/** 문서 유형 — 카테고리 기반 행동 네이밍에 사용 */
-export type DocumentCategory =
+export type DocumentType =
   | "안내문"
   | "공지문"
   | "준비사항"
@@ -11,26 +10,63 @@ export type DocumentCategory =
   | "체크리스트"
   | "기타";
 
-export type ActionItem = {
+export type Todo = {
+  id: string;
+  title: string;
+  category: string | null;
+  documentType: DocumentType | null;
+  done: boolean;
+  dueDate: string | null;
+  priority?: Priority;
+  parentId: string | null;
+  sortOrder: number;
+  path: string;
+  children: Todo[];
+};
+
+export type TodoPlanMeta = {
+  analysis: string;
+  keywords: string[];
+  keyPoints: string[];
+  requirements: string[];
+  unknowns: string[];
+};
+
+export type TodoPlanV2 = {
+  schemaVersion: 2;
+  root: Todo;
+  meta: TodoPlanMeta;
+};
+
+export type DraftTodo = {
+  title: string;
+  category?: string | null;
+  documentType?: DocumentType | null;
+  done?: boolean;
+  dueDate: string | null;
+  priority?: Priority;
+  children: DraftTodo[];
+};
+
+export type DraftTodoPlanInput = {
+  root: DraftTodo;
+  meta: TodoPlanMeta;
+};
+
+export type LegacyActionItem = {
   task: string;
   due: string | null;
   priority?: Priority;
-  /** 완료 여부. DB 반영 */
   done?: boolean;
 };
 
-export type ActionPlan = {
-  /** 문서 유형 (AI 판단). 없으면 "기타"로 간주 */
-  category?: DocumentCategory;
-  /** AI가 생성한 제목 (전체 맥락 반영). */
+export type LegacyActionPlan = {
+  category?: DocumentType;
   title?: string;
-  /** AI가 이해한 이미지/파일 내용 요약 (2~5문장). 문서가 무엇인지에 초점. */
   analysis?: string;
-  /** 문서 핵심 키워드 (한눈에 보는 태그). */
   keywords?: string[];
-  /** 문서 내부에서 나온 정보를 정리한 핵심 포인트 (불릿 형태). */
   keyPoints?: string[];
-  actions: ActionItem[];
+  actions: LegacyActionItem[];
   requirements: string[];
   unknowns: string[];
 };
@@ -38,15 +74,11 @@ export type ActionPlan = {
 export type ParseInput = {
   type: "image" | "pdf" | "text";
   imageBase64?: string;
-  /** 여러 이미지 (최대 5개). 있으면 imageBase64 대신 사용 */
   imagesBase64?: string[];
-  /** Supabase Storage parse-temp 경로 (복수). imageStoragePaths 사용 시 base64 생략 가능 */
   imageStoragePaths?: string[];
   pdfBase64?: string;
-  /** Supabase Storage parse-temp 경로 (단일). pdfStoragePath 사용 시 pdfBase64 생략 가능 */
   pdfStoragePath?: string;
   text?: string;
-  /** Pro 전용 옵션 */
   options?: {
     model?: string;
     usePriority?: boolean;
@@ -55,10 +87,14 @@ export type ParseInput = {
   };
 };
 
-export type SavedActionPlan = {
+export type SavedTodoPlanRecord = {
   id: string;
   user_id: string;
-  plan: ActionPlan;
+  plan: TodoPlanV2;
   title: string | null;
+  category: string | null;
+  document_type: string | null;
+  plan_version: number;
   created_at: string;
+  updated_at: string;
 };

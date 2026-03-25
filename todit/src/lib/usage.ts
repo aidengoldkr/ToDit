@@ -1,30 +1,26 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getTier, type PlanTier } from "@/lib/subscription";
+import { getTier } from "@/lib/subscription";
 
 export const FREE_MONTHLY_LIMIT = 20;
+const MAX_USAGE_UPDATE_RETRIES = 5;
 
 export type UserUsage = {
   count: number;
-  limit: number | null; // null means unlimited
+  limit: number | null;
   last_reset_at: string;
 };
 
-/** 사용량 조회 및 월별 초기화 적용 */
-export async function getOrResetUsage(
+type UsageRow = {
+  balance: number;
+  last_refill_at: string;
+};
+
+async function getUsageRow(
   userId: string,
   displayName?: string | null
-): Promise<UserUsage | null> {
+): Promise<UsageRow | null> {
   const supabase = createAdminClient();
   if (!supabase) return null;
-
-  const tier = await getTier(userId);
-  const limit = tier === "pro" ? null : FREE_MONTHLY_LIMIT;
-
-  const { data: existing } = await supabase
-    .from("users")
-    .select("balance, last_refill_at")
-    .eq("id", userId)
-    .single();
 
   const now = new Date();
   const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -33,13 +29,18 @@ export async function getOrResetUsage(
       ? { name: displayName }
       : {};
 
+  const { data: existing } = await supabase
+    .from("users")
+    .select("balance, last_refill_at")
+    .eq("id", userId)
+    .single();
+
   if (existing) {
     const lastRefill = existing.last_refill_at ? new Date(existing.last_refill_at) : null;
     const lastMonth = lastRefill
       ? new Date(lastRefill.getFullYear(), lastRefill.getMonth(), 1).toISOString()
       : null;
 
-    // 달이 바뀌었으면 count(balance)를 0으로 초기화
     if (lastMonth && lastMonth < thisMonth) {
       await supabase
         .from("users")
@@ -50,85 +51,144 @@ export async function getOrResetUsage(
           ...namePayload,
         })
         .eq("id", userId);
-      return { count: 0, limit, last_reset_at: thisMonth };
+
+      return {
+        balance: 0,
+        last_refill_at: thisMonth,
+      };
     }
 
     if (Object.keys(namePayload).length > 0) {
       await supabase
         .from("users")
-        .update({ updated_at: now.toISOString(), ...namePayload })
+        .update({
+          updated_at: now.toISOString(),
+          ...namePayload,
+        })
         .eq("id", userId);
     }
 
     return {
-      count: existing.balance ?? 0,
-      limit,
-      last_reset_at: existing.last_refill_at ?? thisMonth,
+      balance: existing.balance ?? 0,
+      last_refill_at: existing.last_refill_at ?? thisMonth,
     };
   }
 
-  // 신규 유저 생성 (usage.ts 폴백)
   const { data: inserted } = await supabase
     .from("users")
     .insert({
       id: userId,
-      balance: 0, // 초기 사용량 0
+      balance: 0,
       last_refill_at: thisMonth,
-      provider: "google", // 기존 동작 호환성
+      provider: "google",
       ...namePayload,
     })
     .select("balance, last_refill_at")
     .single();
 
   if (!inserted) return null;
+
   return {
-    count: inserted.balance ?? 0,
-    limit,
-    last_reset_at: inserted.last_refill_at ?? thisMonth,
+    balance: inserted.balance ?? 0,
+    last_refill_at: inserted.last_refill_at ?? thisMonth,
   };
 }
 
-/** 사용량 1회 증가 */
+export async function getOrResetUsage(
+  userId: string,
+  displayName?: string | null
+): Promise<UserUsage | null> {
+  const tier = await getTier(userId);
+  const usage = await getUsageRow(userId, displayName);
+  if (!usage) return null;
+
+  return {
+    count: usage.balance,
+    limit: tier === "pro" ? null : FREE_MONTHLY_LIMIT,
+    last_reset_at: usage.last_refill_at,
+  };
+}
+
+export async function reserveFreeUsage(
+  userId: string,
+  displayName?: string | null
+): Promise<"reserved" | "limit_exceeded" | "error"> {
+  const supabase = createAdminClient();
+  if (!supabase) return "error";
+
+  for (let attempt = 0; attempt < MAX_USAGE_UPDATE_RETRIES; attempt += 1) {
+    const usage = await getUsageRow(userId, displayName);
+    if (!usage) return "error";
+
+    if (usage.balance >= FREE_MONTHLY_LIMIT) {
+      return "limit_exceeded";
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({
+        balance: usage.balance + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+      .eq("balance", usage.balance)
+      .select("balance")
+      .maybeSingle();
+
+    if (!error && data) {
+      return "reserved";
+    }
+  }
+
+  return "error";
+}
+
+export async function releaseFreeUsage(userId: string): Promise<void> {
+  const supabase = createAdminClient();
+  if (!supabase) return;
+
+  for (let attempt = 0; attempt < MAX_USAGE_UPDATE_RETRIES; attempt += 1) {
+    const usage = await getUsageRow(userId);
+    if (!usage || usage.balance <= 0) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({
+        balance: usage.balance - 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+      .eq("balance", usage.balance)
+      .select("balance")
+      .maybeSingle();
+
+    if (!error && data) {
+      return;
+    }
+  }
+}
+
 export async function incrementUsage(userId: string): Promise<boolean> {
   const supabase = createAdminClient();
   if (!supabase) return false;
 
   const tier = await getTier(userId);
   if (tier === "pro") {
-    // Pro는 카운트만 올리고 제한 체크 안 함 (또는 통계용으로만 유지)
-    const { data: row } = await supabase
-      .from("users")
-      .select("balance")
-      .eq("id", userId)
-      .single();
+    const usage = await getUsageRow(userId);
+    if (!usage) return false;
 
-    await supabase
+    const { error } = await supabase
       .from("users")
       .update({
-        balance: (row?.balance ?? 0) + 1,
+        balance: usage.balance + 1,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
-    return true;
+
+    return !error;
   }
 
-  // Free 사용자 체크
-  const { data: row } = await supabase
-    .from("users")
-    .select("balance")
-    .eq("id", userId)
-    .single();
-
-  const currentCount = row?.balance ?? 0;
-  if (currentCount >= FREE_MONTHLY_LIMIT) return false;
-
-  const { error } = await supabase
-    .from("users")
-    .update({
-      balance: currentCount + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
-
-  return !error;
+  return (await reserveFreeUsage(userId)) === "reserved";
 }

@@ -8,11 +8,13 @@ import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
 import { createStartClickHandler } from "@/lib/in-app";
 
 import {
-  readStoredActionPlan,
-  writeStoredActionPlan,
-  clearStoredActionPlan,
+  readStoredTodoPlan,
+  writeStoredTodoPlan,
+  clearStoredTodoPlan,
 } from "@/lib/action-plan-session";
-import type { ActionPlan } from "@/types";
+import { getUpgradeHref, PRO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
+import { FREE_IMAGE_LIMIT } from "@/lib/plan-policy";
+import type { TodoPlanV2 } from "@/types";
 
 import styles from "./page.module.css";
 import GoogleAd from "@/components/GoogleAd";
@@ -55,7 +57,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      setHasSavedResult(readStoredActionPlan(session?.user?.id) !== null);
+      setHasSavedResult(readStoredTodoPlan(session?.user?.id) !== null);
       fetchUsage();
       fetchConsent();
       fetchHistory();
@@ -136,6 +138,7 @@ export default function UploadPage() {
   }
 
   const isPro = usage?.limit === null;
+  const upgradeHref = getUpgradeHref(status === "authenticated");
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -160,9 +163,9 @@ export default function UploadPage() {
       }
       let newFiles = [...imageFiles, ...validImages];
 
-      if (!isPro && newFiles.length > 5) {
-        setError("무료 요금제에서는 이미지를 최대 5장까지 업로드할 수 있습니다.");
-        newFiles = newFiles.slice(0, 5);
+      if (!isPro && newFiles.length > FREE_IMAGE_LIMIT) {
+        setError(`무료 요금제에서는 이미지를 최대 ${FREE_IMAGE_LIMIT}장까지 업로드할 수 있습니다.`);
+        newFiles = newFiles.slice(0, FREE_IMAGE_LIMIT);
       } else {
         setError(null);
       }
@@ -184,7 +187,7 @@ export default function UploadPage() {
 
   const removeImage = (index: number) => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
-    if (error?.includes("최대 5장")) {
+    if (error?.includes(`최대 ${FREE_IMAGE_LIMIT}장`)) {
       setError(null);
     }
   };
@@ -284,12 +287,12 @@ export default function UploadPage() {
         throw new Error(message);
       }
 
-      if (session?.user?.id) {
-        writeStoredActionPlan(payload as ActionPlan, session.user.id);
+      const { id: savedId, ...planData } = payload as { id?: string } & TodoPlanV2;
+      if (session?.user?.id && savedId) {
+        writeStoredTodoPlan(planData, session.user.id);
       }
       setHasSavedResult(true);
 
-      const savedId = (payload as any).id;
       if (savedId) {
         router.push(`/todo?id=${savedId}`);
       } else {
@@ -332,7 +335,7 @@ export default function UploadPage() {
   }
 
   const handleLogout = async () => {
-    clearStoredActionPlan();
+    clearStoredTodoPlan();
     await signOut({ callbackUrl: "/" });
   };
 
@@ -378,7 +381,7 @@ export default function UploadPage() {
                 </div>
                 <div className={styles.proCtaLink}>
                   <Link href="/plan" target="_blank" className={styles.loadingAdLink}>
-                    광고 없이 바로 쓰려면? <strong>ToDit Pro</strong>
+                    Pro 업그레이드 보기
                   </Link>
                 </div>
               </div>
@@ -477,7 +480,7 @@ export default function UploadPage() {
                             </div>
                           ))}
                         </div>
-                        <p className={styles.fileListText}>{imageFiles.length}개의 파일 선택됨 {(!isPro) && "(무료 최대 5장)"}</p>
+                        <p className={styles.fileListText}>{imageFiles.length}개의 파일 선택됨 {(!isPro) && `(무료 최대 ${FREE_IMAGE_LIMIT}장)`}</p>
                       </>
                     )}
                     {activeTab === 'pdf' && pdfFile && (
@@ -624,7 +627,7 @@ export default function UploadPage() {
 
           {/* Usage / Upgrade Card */}
           <div className={styles.limitsCard}>
-            <div className={styles.limitsTitle}>{isPro ? "Pro 요금제" : "무료 요금제"}</div>
+            <div className={styles.limitsTitle}>{isPro ? "Pro 플랜" : "Free 플랜"}</div>
             <div className={styles.limitsBar}>
               <div
                 className={styles.limitsFill}
@@ -634,12 +637,20 @@ export default function UploadPage() {
               ></div>
             </div>
             <div className={styles.limitsText}>
-              <span>{usage ? usage.count : "..."} / {usage?.limit ? usage.limit : "무제한"} 회 생성</span>
-              <span>{usage?.last_reset_at ? `${new Date(usage.last_reset_at).getMonth() + 1}월 사용량` : "매월 초기화"}</span>
+              <span>{usage ? usage.count : "..."} / {usage?.limit ? usage.limit : "무제한"}회 생성</span>
+              <span>
+                {isPro ? "PDF 분석과 고급 옵션 활성화" : `${PRO_MONTHLY_PRICE_LABEL} · 광고 제거`}
+              </span>
             </div>
-            <Link href="/plan" className={styles.upgradeLink}>
-              {isPro ? "구독 및 요금제 관리" : "무제한으로 업그레이드 →"}
-            </Link>
+            {isPro ? (
+              <Link href="/plan" className={styles.upgradeLink}>
+                플랜 상세 보기
+              </Link>
+            ) : (
+              <a href={upgradeHref} className={styles.upgradeLink}>
+                Pro 업그레이드
+              </a>
+            )}
           </div>
 
         </aside>

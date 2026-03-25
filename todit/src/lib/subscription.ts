@@ -1,33 +1,20 @@
+import {
+  getSubscriptionByUserId,
+  isSubscriptionActivePro,
+} from "@/lib/billing/service";
+import { PRO_PLAN_CODE } from "@/lib/billing";
+import { FREE_IMAGE_LIMIT, PRO_IMAGE_LIMIT, type PlanTier } from "@/lib/plan-policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type PlanTier = "free" | "pro";
-
-/** 모든 사용자 공통: 액션 플랜 최대 개수 */
 const PLAN_LIMIT = 10;
 const FREE_PLAN_LIMIT = PLAN_LIMIT;
 const PRO_PLAN_LIMIT = PLAN_LIMIT;
-const FREE_IMAGE_LIMIT = 5;
-const PRO_IMAGE_LIMIT = 50;
 
-/** 사용자 티어 조회 (Pro: active 구독만) */
 export async function getTier(userId: string): Promise<PlanTier> {
-  const supabase = createAdminClient();
-  if (!supabase) return "free";
-
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("status, current_period_end")
-    .eq("user_id", userId)
-    .single();
-
-  if (!data) return "free";
-  if (data.status !== "active") return "free";
-  const end = data.current_period_end ? new Date(data.current_period_end) : null;
-  if (end && end.getTime() < Date.now()) return "free"; // 만료
-  return "pro";
+  const subscription = await getSubscriptionByUserId(userId).catch(() => null);
+  return isSubscriptionActivePro(subscription) ? "pro" : "free";
 }
 
-/** 사용자 구독 상태를 활성(Pro)으로 업데이트 */
 export async function activateSubscription(userId: string): Promise<boolean> {
   const supabase = createAdminClient();
   if (!supabase) return false;
@@ -37,24 +24,31 @@ export async function activateSubscription(userId: string): Promise<boolean> {
 
   const { error } = await supabase
     .from("subscriptions")
-    .upsert({
-      user_id: userId,
-      status: "active",
-      current_period_end: nextMonth.toISOString(),
-      updated_at: now.toISOString(),
-    }, { onConflict: "user_id" });
+    .upsert(
+      {
+        user_id: userId,
+        plan: PRO_PLAN_CODE,
+        status: "active",
+        current_period_start: now.toISOString(),
+        current_period_end: nextMonth.toISOString(),
+        next_billing_at: nextMonth.toISOString(),
+        last_paid_at: now.toISOString(),
+        cancel_at_period_end: false,
+        updated_at: now.toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
 
   return !error;
 }
 
-/** 행동 플랜 생성 가능 개수 (모든 사용자 10개로 제한) */
 export function getPlanLimit(_tier: PlanTier): number {
   return PLAN_LIMIT;
 }
 
-/** 플랜당 이미지 첨부 가능 개수 */
 export function getImageLimit(tier: PlanTier): number {
   return tier === "pro" ? PRO_IMAGE_LIMIT : FREE_IMAGE_LIMIT;
 }
 
-export { PLAN_LIMIT, FREE_PLAN_LIMIT, FREE_IMAGE_LIMIT, PRO_IMAGE_LIMIT };
+export type { PlanTier } from "@/lib/plan-policy";
+export { PLAN_LIMIT, FREE_PLAN_LIMIT, FREE_IMAGE_LIMIT, PRO_IMAGE_LIMIT, PRO_PLAN_LIMIT };

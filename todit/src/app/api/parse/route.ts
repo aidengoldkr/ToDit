@@ -1,38 +1,67 @@
 import { NextResponse } from "next/server";
-import { parseToActionPlan } from "@/lib/openai";
+import { parseToTodoPlan } from "@/lib/openai";
 import { extractTextFromImages } from "@/lib/google-ocr";
 import { getServerSession } from "@/lib/auth";
-import {
-  getOrResetUsage,
-  incrementUsage,
-  FREE_MONTHLY_LIMIT,
-} from "@/lib/usage";
+import { releaseFreeUsage, reserveFreeUsage } from "@/lib/usage";
 import { getTier } from "@/lib/subscription";
-import { getTermsAgreed } from "@/lib/consent";
+import { ConsentStorageError, getTermsAgreed } from "@/lib/consent";
 import { downloadFromParseTemp, deleteFromParseTemp } from "@/lib/supabase/storage";
 import { ParseInputSchema, validateStoragePathOwnership } from "@/lib/validators";
-import type { ParseInput } from "@/types";
+import {
+  assertParseRequestAllowed,
+  getRequestedImageCount,
+  PlanRestrictionError,
+} from "@/lib/plan-policy";
+import type { ParseInput, Todo, TodoPlanV2 } from "@/types";
 
-/** PDF 최대 용량 (바이트) */
-const PDF_MAX_BYTES = 10 * 1024 * 1024; // 10MB
+function getAuthConfigErrorResponse() {
+  return NextResponse.json(
+    { error: "Authentication configuration is unavailable." },
+    { status: 503 }
+  );
+}
+
+function stripTodoPriorities(todo: Todo): Todo {
+  return {
+    ...todo,
+    priority: undefined,
+    children: todo.children.map(stripTodoPriorities),
+  };
+}
+
+function stripPlanPriorities(plan: TodoPlanV2): TodoPlanV2 {
+  return {
+    ...plan,
+    root: stripTodoPriorities(plan.root),
+  };
+}
 
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: process.env.NODE_ENV === "development" ? "OPENAI_API_KEY is not set. Add it to .env.local." : "서비스를 일시적으로 사용할 수 없습니다." },
+      {
+        error:
+          process.env.NODE_ENV === "development"
+            ? "OPENAI_API_KEY is not set. Add it to .env.local."
+            : "서비스를 일시적으로 사용할 수 없습니다.",
+      },
       { status: 503 }
     );
   }
 
-  let session: Awaited<ReturnType<typeof getServerSession>> = null;
-  if (process.env.NEXTAUTH_SECRET) {
+  let session: Awaited<ReturnType<typeof getServerSession>>;
+  try {
     session = await getServerSession();
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "로그인이 필요합니다." },
-        { status: 401 }
-      );
-    }
+  } catch (error) {
+    console.error("[parse] Failed to resolve session:", error);
+    return getAuthConfigErrorResponse();
+  }
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
+  try {
     const agreed = await getTermsAgreed(session.user.id);
     if (!agreed) {
       return NextResponse.json(
@@ -40,16 +69,21 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
+  } catch (error) {
+    if (error instanceof ConsentStorageError) {
+      return NextResponse.json(
+        { error: "동의 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+        { status: 503 }
+      );
+    }
+    throw error;
   }
 
   let rawBody: unknown;
   try {
     rawBody = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const parsed = ParseInputSchema.safeParse(rawBody);
@@ -59,109 +93,148 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  const { type, imageBase64, imagesBase64, imageStoragePaths, pdfBase64, pdfStoragePath, text, options } = parsed.data as ParseInput;
 
-  const tier = session?.user?.id ? await getTier(session.user.id) : "free";
+  const {
+    type,
+    imageBase64,
+    imagesBase64,
+    imageStoragePaths,
+    pdfBase64,
+    pdfStoragePath,
+    text,
+    options,
+  } = parsed.data as ParseInput;
 
-  // Free 요금제는 4o-mini 고정 및 우선순위 분석 불가 (Pro 전용 옵션 제어)
-  const finalOptions = tier === "pro"
-    ? { ...options, model: "gpt-4o" } // Pro는 별칭 대신 안정적인 4o 모델 고정 사용
-    : { model: "gpt-4o-mini", usePriority: false };
+  const tier = await getTier(session.user.id);
 
-  if (session?.user?.id) {
-    const usage = await getOrResetUsage(session.user.id, session.user.name);
-    if (tier === "free" && usage && usage.count >= FREE_MONTHLY_LIMIT) {
+  try {
+    assertParseRequestAllowed({
+      tier,
+      type,
+      imageCount: getRequestedImageCount({
+        imageStoragePaths,
+        imagesBase64,
+        imageBase64,
+      }),
+    });
+  } catch (error) {
+    if (error instanceof PlanRestrictionError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status }
+      );
+    }
+    throw error;
+  }
+
+  const finalOptions =
+    tier === "pro"
+      ? { ...options, model: "gpt-4o" }
+      : { model: "gpt-4o-mini", usePriority: false };
+
+  let reservedFreeUsage = false;
+  let keepReservedUsage = false;
+
+  if (tier === "free") {
+    const reservation = await reserveFreeUsage(session.user.id, session.user.name);
+    if (reservation === "limit_exceeded") {
       return NextResponse.json(
         {
-          error: `무료 플랜의 월간 생성 한도(${FREE_MONTHLY_LIMIT}회)를 모두 사용하셨습니다.`,
+          error: "무료 플랜의 월간 생성 가능 횟수를 모두 사용했습니다.",
           code: "LIMIT_EXCEEDED",
         },
         { status: 402 }
       );
     }
+
+    if (reservation === "error") {
+      return NextResponse.json(
+        { error: "사용량 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+        { status: 503 }
+      );
+    }
+
+    reservedFreeUsage = true;
+    keepReservedUsage = true;
   }
 
   const storagePathsToDelete: string[] = [];
-  const userId = session?.user?.id;
+  const userId = session.user.id;
+
   try {
     if (type === "pdf" && pdfStoragePath) {
-      if (userId) validateStoragePathOwnership(pdfStoragePath, userId);
+      validateStoragePathOwnership(pdfStoragePath, userId);
       storagePathsToDelete.push(pdfStoragePath);
     }
+
     if (type === "image" && Array.isArray(imageStoragePaths) && imageStoragePaths.length > 0) {
-      for (const p of imageStoragePaths) {
-        if (userId) validateStoragePathOwnership(p, userId);
+      for (const path of imageStoragePaths) {
+        validateStoragePathOwnership(path, userId);
       }
       storagePathsToDelete.push(...imageStoragePaths);
     }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "잘못된 스토리지 경로입니다.";
-    return NextResponse.json({ error: msg }, { status: 403 });
+  } catch (error) {
+    keepReservedUsage = false;
+    const message = error instanceof Error ? error.message : "잘못된 스토리지 경로입니다.";
+    return NextResponse.json({ error: message }, { status: 403 });
   }
 
   let textToUse: string | undefined;
-  if (type === "pdf" && pdfStoragePath) {
-    try {
-      const buf = await downloadFromParseTemp(pdfStoragePath);
-      const m = await import("pdf-parse");
-      const pdf = (m.default ?? m) as (buffer: Buffer) => Promise<{ text: string }>;
-      const data = await pdf(buf);
+
+  try {
+    if (type === "pdf" && pdfStoragePath) {
+      const buffer = await downloadFromParseTemp(pdfStoragePath);
+      const module = await import("pdf-parse");
+      const pdf = (module.default ?? module) as (
+        buffer: Buffer
+      ) => Promise<{ text: string }>;
+      const data = await pdf(buffer);
       textToUse = data?.text ?? "";
-    } catch (e) {
-      await deleteFromParseTemp(storagePathsToDelete);
-      const message = e instanceof Error ? e.message : "PDF download or parse failed";
-      return NextResponse.json({ error: message }, { status: 502 });
-    }
-  } else if (type === "pdf" && pdfBase64) {
-    try {
-      const buf = Buffer.from(pdfBase64, "base64");
-      const m = await import("pdf-parse");
-      const pdf = (m.default ?? m) as (buffer: Buffer) => Promise<{ text: string }>;
-      const data = await pdf(buf);
+    } else if (type === "pdf" && pdfBase64) {
+      const buffer = Buffer.from(pdfBase64, "base64");
+      const module = await import("pdf-parse");
+      const pdf = (module.default ?? module) as (
+        buffer: Buffer
+      ) => Promise<{ text: string }>;
+      const data = await pdf(buffer);
       textToUse = data?.text ?? "";
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "PDF parse failed";
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-  } else if (type === "text" && text) {
-    textToUse = text;
-  } else if (type === "image" && hasImageStorage(type, imageStoragePaths)) {
-    try {
-      const paths = imageStoragePaths as string[];
-      const buffers = await Promise.all(paths.map((p) => downloadFromParseTemp(p)));
-      const base64Array = buffers.map((buf) => buf.toString("base64"));
+    } else if (type === "text" && text) {
+      textToUse = text;
+    } else if (type === "image" && Array.isArray(imageStoragePaths) && imageStoragePaths.length > 0) {
+      const buffers = await Promise.all(imageStoragePaths.map((path) => downloadFromParseTemp(path)));
+      textToUse = await extractTextFromImages(buffers.map((buffer) => buffer.toString("base64")));
+    } else if (type === "image") {
+      const base64Array =
+        Array.isArray(imagesBase64) && imagesBase64.length > 0
+          ? imagesBase64
+          : imageBase64
+            ? [imageBase64]
+            : [];
       textToUse = await extractTextFromImages(base64Array);
-    } catch (e) {
-      await deleteFromParseTemp(storagePathsToDelete);
-      const msg = e instanceof Error ? e.message : "";
-      return NextResponse.json(
-        { error: process.env.NODE_ENV === "development" ? msg : "서비스를 일시적으로 사용할 수 없습니다." },
-        { status: 502 }
-      );
     }
-  } else if (type === "image") {
-    const base64Array = Array.isArray(imagesBase64) && imagesBase64.length > 0
-      ? imagesBase64
-      : imageBase64
-        ? [imageBase64]
-        : [];
-    try {
-      textToUse = await extractTextFromImages(base64Array);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "";
-      return NextResponse.json(
-        { error: process.env.NODE_ENV === "development" ? msg : "서비스를 일시적으로 사용할 수 없습니다." },
-        { status: 502 }
-      );
-    }
+  } catch (error) {
+    keepReservedUsage = false;
+    const message =
+      error instanceof Error ? error.message : type === "pdf" ? "PDF parse failed" : "OCR failed";
+
+    return NextResponse.json(
+      {
+        error:
+          process.env.NODE_ENV === "development"
+            ? message
+            : "서비스를 일시적으로 사용할 수 없습니다.",
+      },
+      { status: 502 }
+    );
   }
 
   if (textToUse === undefined) {
+    keepReservedUsage = false;
     return NextResponse.json({ error: "Missing content" }, { status: 400 });
   }
 
   try {
-    const plan = await parseToActionPlan(
+    let plan = await parseToTodoPlan(
       {
         type: type === "image" ? "text" : type,
         text: textToUse,
@@ -169,50 +242,46 @@ export async function POST(request: Request) {
       finalOptions
     );
 
-    // Free 티어인 경우 결과에서 우선순위 분석 정보를 제거 (UI에서 숨김 처리)
     if (tier === "free") {
-      plan.actions = plan.actions.map(action => {
-        const { priority, ...rest } = action;
-        return rest;
-      });
+      plan = stripPlanPriorities(plan);
     }
 
-    let savedPlanId: string | undefined;
-
-    if (session?.user?.id) {
-      // 횟수 1 증가
-      await incrementUsage(session.user.id);
-
-      // Save to database
-      const supabase = await import("@/lib/supabase/admin").then(m => m.createAdminClient());
-      if (supabase) {
-        const { data: savedPlan } = await supabase
-          .from("saved_todo")
-          .insert({
-            user_id: session.user.id,
-            plan: plan,
-            title: plan.title || "새 To-Do 플로우",
-            options: finalOptions, // Store options for history/debugging
-          })
-          .select("id")
-          .single();
-        if (savedPlan) {
-          savedPlanId = savedPlan.id;
-        }
-      }
+    const supabase = await import("@/lib/supabase/admin").then((module) => module.createAdminClient());
+    if (!supabase) {
+      throw new Error("결과 저장을 위한 데이터베이스 연결이 없습니다.");
     }
 
-    return NextResponse.json({ ...plan, id: savedPlanId });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Parse failed";
+    const { data: savedPlan, error } = await supabase
+      .from("saved_todo")
+      .insert({
+        user_id: session.user.id,
+        plan,
+        title: plan.root.title || "제목 없는 To-Do",
+        category: plan.root.category,
+        document_type: plan.root.documentType,
+        plan_version: 2,
+        options: finalOptions,
+      })
+      .select("id")
+      .single();
+
+    if (error || !savedPlan?.id) {
+      throw new Error(error?.message || "결과 저장에 실패했습니다.");
+    }
+
+    keepReservedUsage = true;
+    return NextResponse.json({ ...plan, id: savedPlan.id });
+  } catch (error) {
+    keepReservedUsage = false;
+    const message = error instanceof Error ? error.message : "Parse failed";
     return NextResponse.json({ error: message }, { status: 500 });
   } finally {
     if (storagePathsToDelete.length > 0) {
       await deleteFromParseTemp(storagePathsToDelete);
     }
-  }
-}
 
-function hasImageStorage(type: string, paths: unknown): paths is string[] {
-  return type === "image" && Array.isArray(paths) && paths.length > 0;
+    if (reservedFreeUsage && !keepReservedUsage) {
+      await releaseFreeUsage(session.user.id);
+    }
+  }
 }

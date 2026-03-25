@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearStoredActionPlan } from "@/lib/action-plan-session";
+import { clearStoredTodoPlan } from "@/lib/action-plan-session";
 import styles from "./Navbar.module.css";
 import { TiAdjustContrast } from "react-icons/ti";
 
@@ -22,7 +22,6 @@ export default function Navbar() {
   }, openModal);
 
   useEffect(() => {
-    // Check initial dark mode state
     setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
 
@@ -60,22 +59,21 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => {
-                clearStoredActionPlan();
+                clearStoredTodoPlan();
                 signOut({ callbackUrl: "/" });
               }}
               className={styles.btn}
-              style={{ background: 'var(--surface-soft)', color: 'var(--text)', border: '1px solid var(--border)' }}
+              style={{
+                background: "var(--surface-soft)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+              }}
             >
               로그아웃
             </button>
           </div>
         ) : (
-          <button 
-            type="button" 
-            onClick={handleLogin} 
-            className={styles.btn}
-            disabled={status === "loading"}
-          >
+          <button type="button" onClick={handleLogin} className={styles.btn} disabled={status === "loading"}>
             {status === "loading" ? "..." : "로그인"}
           </button>
         )}

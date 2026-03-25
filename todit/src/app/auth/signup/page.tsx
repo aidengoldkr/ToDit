@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
-import styles from "../auth.module.css";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
+import styles from "../auth.module.css";
 
 export default function SignUpPage() {
-  const router = useRouter();
-  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,11 +33,11 @@ export default function SignUpPage() {
         throw new Error(data.message || "회원가입에 실패했습니다.");
       }
 
-      // 회원가입 성공 처리 (이메일 인증 안내)
+      setSuccessMessage(data.message || "회원가입이 완료되었습니다.");
       setIsSuccess(true);
-      setIsLoading(false);
     } catch (err: any) {
       setError(err.message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -53,15 +51,16 @@ export default function SignUpPage() {
       <div className={styles.container}>
         <div className={styles.card}>
           <div className={styles.header}>
-            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📧</div>
-            <h1 className={styles.title}>이메일을 확인해 주세요!</h1>
-            <p className={styles.subtitle}>
-              <strong>{email}</strong> 주소로 인증 메일을 발송했습니다.<br /><br />
-              메일함(또는 스팸함)을 확인하여 인증 버튼을 클릭하면 ToDit 서비스를 바로 시작하실 수 있습니다.
-            </p>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>✓</div>
+            <h1 className={styles.title}>가입 요청을 확인했습니다</h1>
+            <p className={styles.subtitle}>{successMessage}</p>
           </div>
-          <Link href="/auth/signin" className={styles.submitBtn} style={{ textAlign: "center", textDecoration: "none" }}>
-            로그인 페이지로 가기
+          <Link
+            href="/auth/signin"
+            className={styles.submitBtn}
+            style={{ textAlign: "center", textDecoration: "none" }}
+          >
+            로그인 페이지로 이동
           </Link>
         </div>
       </div>
@@ -72,8 +71,8 @@ export default function SignUpPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1 className={styles.title}>새로 오셨군요!</h1>
-          <p className={styles.subtitle}>간단한 회원가입으로 ToDit을 시작하세요</p>
+          <h1 className={styles.title}>새 계정 만들기</h1>
+          <p className={styles.subtitle}>신규 가입만 가능합니다. 기존 계정이 있으면 로그인 페이지를 이용해 주세요.</p>
         </div>
 
         {error && <div className={styles.errorBox}>{error}</div>}
@@ -81,38 +80,41 @@ export default function SignUpPage() {
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <label className={styles.label}>이름</label>
-            <input 
-              type="text" 
-              className={styles.input} 
+            <input
+              type="text"
+              className={styles.input}
               placeholder="홍길동"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required 
+              required
             />
           </div>
+
           <div className={styles.inputGroup}>
             <label className={styles.label}>이메일</label>
-            <input 
-              type="email" 
-              className={styles.input} 
+            <input
+              type="email"
+              className={styles.input}
               placeholder="example@todit.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
             />
           </div>
+
           <div className={styles.inputGroup}>
             <label className={styles.label}>비밀번호 (6자 이상)</label>
-            <input 
-              type="password" 
-              className={styles.input} 
+            <input
+              type="password"
+              className={styles.input}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
               minLength={6}
             />
           </div>
+
           <button type="submit" className={styles.submitBtn} disabled={isLoading}>
             {isLoading ? "처리 중..." : "회원가입"}
           </button>
@@ -128,7 +130,7 @@ export default function SignUpPage() {
         </button>
 
         <div className={styles.footer}>
-          이미 계정이 있으신가요? 
+          이미 계정이 있으신가요?{" "}
           <Link href="/auth/signin" className={styles.link}>
             로그인
           </Link>

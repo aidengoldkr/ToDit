@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
-import { getTermsAgreed, setTermsAgreed } from "@/lib/consent";
+import { ConsentStorageError, getTermsAgreed, setTermsAgreed } from "@/lib/consent";
 
 export async function GET() {
   const session = await getServerSession();
   if (!session?.user?.id) {
     return NextResponse.json({ agreed: false }, { status: 401 });
   }
-  const agreed = await getTermsAgreed(session.user.id);
-  return NextResponse.json({ agreed });
+  try {
+    const agreed = await getTermsAgreed(session.user.id);
+    return NextResponse.json({ agreed });
+  } catch (error) {
+    const message =
+      error instanceof ConsentStorageError
+        ? "Consent storage is unavailable."
+        : "Failed to load consent.";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
 }
 
 export async function POST() {
@@ -19,8 +27,13 @@ export async function POST() {
   try {
     await setTermsAgreed(session.user.id);
     return NextResponse.json({ success: true });
-  } catch (e) {
-    const error = e instanceof Error ? e.message : "Failed to set consent";
-    return NextResponse.json({ error }, { status: 500 });
+  } catch (error) {
+    const message =
+      error instanceof ConsentStorageError
+        ? "Consent storage is unavailable."
+        : error instanceof Error
+          ? error.message
+          : "Failed to set consent";
+    return NextResponse.json({ error: message }, { status: 503 });
   }
 }

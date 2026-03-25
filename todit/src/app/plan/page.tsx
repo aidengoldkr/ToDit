@@ -1,199 +1,188 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import {
+  CancelSubscriptionButton,
+  SubButton,
+} from "@/components/billing/subBtn";
+import {
+  PRO_MONTHLY_PRICE_LABEL,
+  getUpgradeHref,
+  isPayTestAllowedUser,
+  isPayTestEnabled,
+} from "@/lib/billing";
+import {
+  getSubscriptionByUserId,
+  isSubscriptionActivePro,
+} from "@/lib/billing/service";
+import { getServerSession } from "@/lib/auth";
+import { getCustomerUid } from "@/lib/portone/helpers";
 import styles from "./page.module.css";
-import { usePayment } from "@/hooks/usePayment";
 
-interface UserUsage {
-  count: number;
-  limit: number | null;
-}
-
-export default function PlanPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [usage, setUsage] = useState<UserUsage | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const { requestPayment, isPaymentLoading } = usePayment();
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchUsage();
-    }
-  }, [status]);
-
-  async function fetchUsage() {
-    try {
-      const res = await fetch("/api/usage");
-      if (res.ok) {
-        const data = await res.json();
-        setUsage(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+function formatDate(value?: string | null): string | null {
+  if (!value) {
+    return null;
   }
 
-  const isPro = usage?.limit === null;
+  return new Date(value).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
 
-  const handleUpgrade = async () => {
-    if (status !== "authenticated") {
-      router.push("/dashboard");
-      return;
-    }
+export default async function PlanPage() {
+  const session = await getServerSession().catch(() => null);
+  const payTestEnabled = isPayTestEnabled();
 
-    if (!isPro) {
-      // Free -> Pro: 결제 프로세스 시작
-      const res = await requestPayment({
-        customerName: session.user?.name || "사용자",
-        customerEmail: session.user?.email || "user@todit.app",
-      });
+  if (payTestEnabled && !session?.user?.id) {
+    redirect("/auth/signin?callbackUrl=/plan");
+  }
 
-      if (res) {
-        setLoading(true);
-        try {
-          const verifyRes = await fetch("/api/payment/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              imp_uid: res.imp_uid,
-              merchant_uid: res.merchant_uid,
-            }),
-          });
+  if (payTestEnabled && !isPayTestAllowedUser(session?.user?.id)) {
+    redirect("/dashboard");
+  }
 
-          if (verifyRes.ok) {
-            alert("Pro 플랜으로 성공적으로 업그레이드되었습니다!");
-            window.location.reload();
-          } else {
-            const errData = await verifyRes.json();
-            alert(`결제 검증 실패: ${errData.error || "알 수 없는 오류"}`);
-          }
-        } catch (e) {
-          alert("결제 검증 중 네트워크 오류가 발생했습니다.");
-        } finally {
-          setLoading(false);
-        }
-      }
-    } else {
-      // Pro -> Free: 현재 테스트 취소 용도로 그대로 사용 (결제 취소 아님)
-      setLoading(true);
-      try {
-        const res = await fetch("/api/test/toggle-pro", { method: "POST" });
-        if (res.ok) {
-          window.location.reload();
-        } else {
-          alert("업그레이드 해지 중 오류가 발생했습니다.");
-        }
-      } catch (e) {
-        alert("네트워크 오류가 발생했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  const subscription = session?.user?.id
+    ? await getSubscriptionByUserId(session.user.id).catch(() => null)
+    : null;
+  const isPro = isSubscriptionActivePro(subscription);
+  const currentPeriodEnd = formatDate(subscription?.current_period_end);
+  const nextBillingAt = formatDate(subscription?.next_billing_at);
+  const isCancelScheduled = Boolean(subscription?.cancel_at_period_end);
+  const impCode = process.env.NEXT_PUBLIC_PORTONE_IMP_CODE || "";
+  const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY || "";
+  const pgProvider = process.env.PORTONE_PG || "";
+  const canRenderBillingButton =
+    Boolean(session?.user?.id) &&
+    Boolean(impCode) &&
+    Boolean(channelKey || pgProvider);
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>내게 맞는 플랜을 선택하세요</h1>
-        <p className={styles.subtitle}>문서를 To-Do로 만드는 가장 스마트한 방법</p>
+        <h1 className={styles.title}>ToDit 요금제</h1>
+        <p className={styles.subtitle}>
+          문서를 구조화된 TODO로 바꾸는 AI 워크플로우에 맞는 플랜을 선택하세요.
+        </p>
       </header>
 
       <div className={styles.grid}>
-        {/* Free Plan */}
-        <div className={`${styles.card} ${!isPro ? styles.activeCard : ""}`}>
-          {!isPro && <div className={styles.currentBadge}>현재 플랜</div>}
+        <section className={`${styles.card} ${!isPro ? styles.activeCard : ""}`}>
+          {!isPro ? <div className={styles.currentBadge}>현재 플랜</div> : null}
           <div className={styles.planHeader}>
             <h2 className={styles.planName}>Free</h2>
-            <div className={styles.price}>₩0<span>/월</span></div>
-            <p className={styles.planDesc}>기본적인 To-Do 생성 기능이 필요한 분들을 위한 플랜</p>
+            <div className={styles.price}>
+              ₩0<span>/월</span>
+            </div>
+            <p className={styles.planDesc}>
+              텍스트와 이미지 입력을 기반으로 월간 제한 내에서 TODO 계획을 생성합니다.
+            </p>
           </div>
 
           <ul className={styles.features}>
             <li className={styles.feature}>
-              <span className={styles.check}>✓</span> 월 20회 무료 생성
+              <span className={styles.check}>✓</span>
+              월 20회 TODO 생성
             </li>
             <li className={styles.feature}>
-              <span className={styles.check}>✓</span> 기본 AI 모델 사용
+              <span className={styles.check}>✓</span>
+              이미지 업로드 최대 5장
             </li>
             <li className={styles.feature}>
-              <span className={styles.check}>✓</span> 이미지/PDF 분석 지원
+              <span className={styles.check}>✓</span>
+              기본 AI 분석 모델 사용
             </li>
             <li className={styles.featureDisabled}>
-              <span className={styles.cross}>×</span> 광고 포함
+              <span className={styles.cross}>×</span>
+              PDF 분석
             </li>
             <li className={styles.featureDisabled}>
-              <span className={styles.cross}>×</span> 상세 분해 옵션 제외
+              <span className={styles.cross}>×</span>
+              우선순위/상세 옵션
             </li>
           </ul>
 
-          <button
-            className={styles.planBtn}
-            disabled={!isPro}
-            onClick={() => !isPro ? null : handleUpgrade()}
-          >
-            {isPro ? "Free로 전환 (테스트)" : "현재 이용 중"}
+          <button className={styles.planBtn} disabled>
+            {isPro ? "Free로 다운그레이드는 기간 종료 후 반영" : "현재 이용 중"}
           </button>
-        </div>
+        </section>
 
-        {/* Pro Plan */}
-        <div className={`${styles.card} ${styles.proCard} ${isPro ? styles.activeCard : ""}`}>
-          {isPro && <div className={styles.currentBadgePro}>현재 플랜</div>}
+        <section
+          className={`${styles.card} ${styles.proCard} ${isPro ? styles.activeCard : ""}`}
+        >
+          {isPro ? <div className={styles.currentBadgePro}>현재 플랜</div> : null}
           <div className={styles.planHeader}>
             <h2 className={styles.planName}>Pro</h2>
-            <div className={styles.price}>₩2,900<span>/월</span></div>
-            <p className={styles.planDesc}>제한 없는 최신 AI 분석과 강력한 상세 설정을 원하시는 분들을 위해</p>
+            <div className={styles.price}>
+              ₩2,900<span>/월</span>
+            </div>
+            <p className={styles.planDesc}>
+              무제한 생성, PDF 분석, 고급 옵션을 모두 사용하는 월간 구독입니다.
+            </p>
           </div>
 
           <ul className={styles.features}>
             <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> <strong>무제한</strong> To-Do 생성
+              <span className={styles.checkPro}>✓</span>
+              무제한 TODO 생성
             </li>
             <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> 더 강력한 <strong>AI 분석 엔진</strong> 탑재
+              <span className={styles.checkPro}>✓</span>
+              PDF 분석 지원
             </li>
             <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> 상세도 커스텀 (3단계)
+              <span className={styles.checkPro}>✓</span>
+              이미지 업로드 최대 50장
             </li>
             <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> 사용자 지정 카테고리 설정
+              <span className={styles.checkPro}>✓</span>
+              우선순위/상세 설정
             </li>
             <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> 우선순위 자동 할당 기능
-            </li>
-            <li className={styles.feature}>
-              <span className={styles.checkPro}>✓</span> <strong>광고 전면 제거</strong>
+              <span className={styles.checkPro}>✓</span>
+              광고 제거
             </li>
           </ul>
 
-          <button
-            className={`${styles.planBtn} ${styles.proBtn}`}
-            onClick={handleUpgrade}
-            disabled={loading || isPaymentLoading || isPro}
-          >
-            {loading || isPaymentLoading ? "처리 중..." : (isPro ? "이용 중인 플랜" : "Pro로 업그레이드")}
-          </button>
-        </div>
+          {session?.user?.id ? (
+            isPro ? (
+              <CancelSubscriptionButton
+                className={`${styles.planBtn} ${styles.proBtn}`}
+              />
+            ) : canRenderBillingButton ? (
+              <SubButton
+                userId={session.user.id}
+                customerUid={getCustomerUid(session.user.id)}
+                impCode={impCode}
+                channelKey={channelKey}
+                pgProvider={pgProvider}
+                buyerEmail={session.user.email}
+                buyerName={session.user.name}
+                className={`${styles.planBtn} ${styles.proBtn}`}
+                buttonText="Pro 시작하기"
+              />
+            ) : (
+              <button
+                className={`${styles.planBtn} ${styles.proBtn}`}
+                disabled
+              >
+                결제 설정이 아직 준비되지 않았습니다
+              </button>
+            )
+          ) : (
+            <Link
+              href={getUpgradeHref(false)}
+              className={`${styles.planBtn} ${styles.proBtn}`}
+              style={{ textDecoration: "none", textAlign: "center" }}
+            >
+              로그인하고 구독하기
+            </Link>
+          )}
+        </section>
       </div>
 
-
       <section className={styles.faq}>
-        <h3 className={styles.faqTitle}>자주 묻는 질문</h3>
-        <div className={styles.faqItem}>
-          <h4>Q. 언제든지 취소할 수 있나요?</h4>
-          <p>네, 구독은 언제든지 취소하실 수 있으며 다음 결제일에 자동으로 종료됩니다.</p>
-        </div>
-        <div className={styles.faqItem}>
-          <h4>Q. Free 플랜 횟수는 언제 초기화되나요?</h4>
-          <p>매월 1일에 초기화됩니다.</p>
-        </div>
-        <div className={styles.faqItem}>
-          <h4>Q. 서비스 제공 기간은 어떻게 되나요?</h4>
-          <p>월 정기 구독 상품이며, 결제일로부터 1개월(30일) 이용 후 자동 갱신됩니다. 매월 동일한 날짜에 자동 결제가 진행됩니다.</p>
-        </div>
+
       </section>
     </div>
   );

@@ -1,22 +1,62 @@
--- 1. 혹시 미리 생성한 users 테이블이 있다면 삭제합니다.
-DROP TABLE IF EXISTS public.users;
+-- Safe merge migration for usage data.
+-- This migration is intentionally additive. It never drops public.users.
 
--- 2. 기존 user_usage 테이블의 이름을 users로 변경합니다.
-ALTER TABLE public.user_usage RENAME TO users;
+CREATE TABLE IF NOT EXISTS public.users (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  email TEXT UNIQUE,
+  password_hash TEXT,
+  name TEXT,
+  image TEXT,
+  provider TEXT NOT NULL DEFAULT 'credentials',
+  balance INTEGER NOT NULL DEFAULT 0,
+  last_refill_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- 3. 기존 컬럼명의 이름을 통합에 맞게 수정합니다.
-ALTER TABLE public.users RENAME COLUMN user_id TO id;
-ALTER TABLE public.users RENAME COLUMN display_name TO name;
-
--- [수정된 부분] id 컬럼이 자동으로 채워지도록 기본값(UUID) 속성을 추가합니다.
-ALTER TABLE public.users ALTER COLUMN id SET DEFAULT gen_random_uuid()::TEXT;
-
--- 4. 자체 로그인 및 인증 관련 신규 컬럼들을 추가합니다.
-ALTER TABLE public.users 
-  ADD COLUMN IF NOT EXISTS email TEXT UNIQUE,
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS email TEXT,
   ADD COLUMN IF NOT EXISTS password_hash TEXT,
+  ADD COLUMN IF NOT EXISTS name TEXT,
   ADD COLUMN IF NOT EXISTS image TEXT,
-  ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'google';
+  ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'google',
+  ADD COLUMN IF NOT EXISTS balance INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS last_refill_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
--- 5. 인덱스 생성
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'user_usage'
+  ) THEN
+    INSERT INTO public.users (
+      id,
+      name,
+      balance,
+      last_refill_at,
+      provider,
+      created_at,
+      updated_at
+    )
+    SELECT
+      user_id,
+      display_name,
+      COALESCE(balance, 0),
+      COALESCE(last_refill_at, NOW()),
+      'google',
+      NOW(),
+      NOW()
+    FROM public.user_usage
+    ON CONFLICT (id) DO UPDATE
+    SET
+      name = COALESCE(public.users.name, EXCLUDED.name),
+      balance = EXCLUDED.balance,
+      last_refill_at = EXCLUDED.last_refill_at,
+      updated_at = NOW();
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
