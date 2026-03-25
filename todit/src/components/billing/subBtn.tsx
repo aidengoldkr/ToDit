@@ -219,7 +219,7 @@ export function SubButton(props: {
 
       const merchantUid = getMerchantUid(userId);
       const origin =
-        process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+        window.location.origin || process.env.NEXT_PUBLIC_APP_URL || "";
       const noticeUrl = buildBillingWebhookUrl(origin);
       const redirectUrl = `${origin.replace(
         /\/$/,
@@ -246,7 +246,6 @@ export function SubButton(props: {
             amount: PRO_MONTHLY_AMOUNT,
             customer_uid: customerUid,
             buyer_email: buyerEmail || undefined,
-            buyer_name: buyerName || undefined,
             notice_url: noticeUrl,
             m_redirect_url: redirectUrl,
           },
