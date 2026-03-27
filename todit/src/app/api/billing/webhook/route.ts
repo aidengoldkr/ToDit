@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  ensureInactiveSubscription,
   getPaymentStateFromPortone,
   resolveUserIdFromVerifiedPayment,
   syncCancelledPayment,
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
       });
     } else if (isCancelledStatus(payment.status)) {
       await syncCancelledPayment({ userId, payment });
+      await ensureInactiveSubscription(userId).catch(() => undefined);
     } else if (isFailedStatus(payment.status) || payment.status) {
       await syncFailedPayment({
         userId,
@@ -75,6 +77,7 @@ export async function POST(request: Request) {
         payment,
         errorMessage: payment.fail_reason || "Webhook sync marked payment as failed.",
       });
+      await ensureInactiveSubscription(userId).catch(() => undefined);
     }
 
     return NextResponse.json({

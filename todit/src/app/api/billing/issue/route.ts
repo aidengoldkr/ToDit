@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import {
+  chargeSubscriptionNow,
   getPaymentStateFromPortone,
   getSubscriptionByUserId,
-  syncCancelledPayment,
-  syncFailedPayment,
-  syncVerifiedPaidPayment,
 } from "@/lib/billing/service";
-import { PRO_MONTHLY_AMOUNT } from "@/lib/billing";
 import { getServerSession } from "@/lib/auth";
 import {
-  getCustomerUid,
-  isBillingAmountValid,
+  extractUserIdFromCustomerUid,
+  isBillingKeyIssueAmountValid,
   isCancelledStatus,
   isFailedStatus,
   isPaidStatus,
@@ -48,8 +45,7 @@ export async function POST(request: Request) {
     return badRequest("imp_uid, merchant_uid, customer_uid are required.");
   }
 
-  const expectedCustomerUid = getCustomerUid(session.user.id);
-  if (customerUid !== expectedCustomerUid) {
+  if (extractUserIdFromCustomerUid(customerUid) !== session.user.id) {
     return badRequest("Invalid customer_uid.", 403);
   }
 
@@ -58,12 +54,6 @@ export async function POST(request: Request) {
   }
 
   const existingSubscription = await getSubscriptionByUserId(session.user.id);
-  if (
-    existingSubscription?.customer_uid &&
-    existingSubscription.customer_uid !== expectedCustomerUid
-  ) {
-    return badRequest("Subscription ownership mismatch.", 403);
-  }
 
   try {
     const payment = await getPaymentByImpUid(impUid);
@@ -72,47 +62,52 @@ export async function POST(request: Request) {
       return badRequest("merchant_uid verification failed.", 403);
     }
 
-    if (payment.customer_uid !== expectedCustomerUid) {
+    if (payment.customer_uid !== customerUid) {
       return badRequest("customer_uid verification failed.", 403);
     }
 
-    if (!isBillingAmountValid(payment.amount) || payment.amount !== PRO_MONTHLY_AMOUNT) {
-      return badRequest("Invalid payment amount.", 403);
+    if (!isBillingKeyIssueAmountValid(payment.amount)) {
+      return badRequest("Invalid billing key issue amount.", 403);
     }
 
-    if (isPaidStatus(payment.status)) {
-      await syncVerifiedPaidPayment({
-        userId: session.user.id,
-        customerUid: expectedCustomerUid,
-        payment,
-      });
+    if (!isPaidStatus(payment.status)) {
+      if (isCancelledStatus(payment.status)) {
+        return badRequest("Billing key issuance was cancelled.", 400);
+      }
 
-      return NextResponse.json({
-        success: true,
-        status: getPaymentStateFromPortone(payment),
-      });
+      if (isFailedStatus(payment.status) || payment.status) {
+        return badRequest(
+          payment.fail_reason || "Billing key issuance failed.",
+          400
+        );
+      }
     }
 
-    if (isCancelledStatus(payment.status)) {
-      await syncCancelledPayment({
-        userId: session.user.id,
-        payment,
-      });
+    const chargeResult = await chargeSubscriptionNow({
+      userId: session.user.id,
+      customerUid,
+      buyerEmail: session.user.email,
+      buyerName: session.user.name,
+      pgProvider: payment.pg_provider || existingSubscription?.pg_provider || null,
+    });
 
-      return badRequest("Payment was cancelled.", 400);
+    if (!chargeResult.success) {
+      return NextResponse.json(
+        {
+          error: chargeResult.error,
+          status: chargeResult.status,
+          merchant_uid: chargeResult.merchantUid,
+        },
+        { status: chargeResult.statusCode }
+      );
     }
 
-    if (isFailedStatus(payment.status) || payment.status) {
-      await syncFailedPayment({
-        userId: session.user.id,
-        merchantUid,
-        customerUid: expectedCustomerUid,
-        payment,
-        errorMessage: payment.fail_reason || "Payment verification failed.",
-      });
-    }
-
-    return badRequest("Payment is not in a paid state.", 400);
+    return NextResponse.json({
+      success: true,
+      status: chargeResult.status,
+      merchant_uid: chargeResult.merchantUid,
+      billing_key_issue_status: getPaymentStateFromPortone(payment),
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to verify payment.";

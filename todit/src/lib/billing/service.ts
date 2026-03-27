@@ -1,16 +1,25 @@
 import {
   FREE_PLAN_CODE,
+  PRO_MONTHLY_AMOUNT,
   PRO_MONTHLY_CURRENCY,
   PRO_PLAN_CODE,
+  PRO_PLAN_NAME,
 } from "@/lib/billing";
 import {
+  extractUserIdFromCustomerUid,
   extractUserIdFromMerchantUid,
   getExpectedBillingCurrency,
+  getMerchantUid,
   getNextBillingPeriod,
   isCancelledStatus,
   isFailedStatus,
+  isPaidStatus,
   normalizePortoneTimestamp,
 } from "@/lib/portone/helpers";
+import {
+  getPaymentByImpUid as getPortonePaymentByImpUid,
+  requestBillingPaymentAgain,
+} from "@/lib/portone/server";
 import type { PortonePayment } from "@/lib/portone/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -56,6 +65,25 @@ export type PaymentRecord = {
   updated_at?: string;
 };
 
+export type ChargeSubscriptionResult =
+  | {
+      success: true;
+      merchantUid: string;
+      payment: PortonePayment;
+      status: string;
+    }
+  | {
+      success: false;
+      merchantUid: string;
+      payment?: PortonePayment | null;
+      status?: string;
+      statusCode: number;
+      error: string;
+    };
+
+const SUBSCRIPTION_SELECT =
+  "user_id, plan, status, customer_uid, pg_provider, billing_key_issued_at, current_period_start, current_period_end, next_billing_at, last_paid_at, cancel_at_period_end, canceled_at, last_payment_status, last_payment_error, metadata, created_at, updated_at";
+
 function getAdmin() {
   const supabase = createAdminClient();
   if (!supabase) {
@@ -71,6 +99,13 @@ function asObject(value: unknown): Record<string, unknown> {
   }
 
   return {};
+}
+
+function getLastAppliedImpUid(
+  subscription?: SubscriptionRecord | null
+): string | null {
+  const value = subscription?.metadata?.last_imp_uid;
+  return typeof value === "string" ? value : null;
 }
 
 export function isSubscriptionActivePro(
@@ -97,9 +132,7 @@ export async function getSubscriptionByUserId(
   const supabase = getAdmin();
   const { data, error } = await supabase
     .from("subscriptions")
-    .select(
-      "user_id, plan, status, customer_uid, pg_provider, billing_key_issued_at, current_period_start, current_period_end, next_billing_at, last_paid_at, cancel_at_period_end, canceled_at, last_payment_status, last_payment_error, metadata, created_at, updated_at"
-    )
+    .select(SUBSCRIPTION_SELECT)
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -108,6 +141,43 @@ export async function getSubscriptionByUserId(
   }
 
   return (data as SubscriptionRecord | null) ?? null;
+}
+
+export async function getSubscriptionsDueForRenewal(
+  nowIso: string
+): Promise<SubscriptionRecord[]> {
+  const supabase = getAdmin();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(SUBSCRIPTION_SELECT)
+    .eq("plan", PRO_PLAN_CODE)
+    .eq("status", "active")
+    .eq("cancel_at_period_end", false)
+    .lte("next_billing_at", nowIso);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as SubscriptionRecord[]) ?? [];
+}
+
+export async function getExpiredActiveSubscriptions(
+  nowIso: string
+): Promise<SubscriptionRecord[]> {
+  const supabase = getAdmin();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(SUBSCRIPTION_SELECT)
+    .eq("plan", PRO_PLAN_CODE)
+    .eq("status", "active")
+    .lte("current_period_end", nowIso);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as SubscriptionRecord[]) ?? [];
 }
 
 export async function getPaymentByMerchantUid(
@@ -171,7 +241,10 @@ export async function resolveUserIdFromVerifiedPayment(
     return existingPayment.user_id;
   }
 
-  return extractUserIdFromMerchantUid(payment.merchant_uid);
+  return (
+    extractUserIdFromCustomerUid(payment.customer_uid) ||
+    extractUserIdFromMerchantUid(payment.merchant_uid)
+  );
 }
 
 function buildPaymentRow(
@@ -264,11 +337,10 @@ export async function syncVerifiedPaidPayment(params: {
   payment: PortonePayment;
 }): Promise<void> {
   const subscription = await getSubscriptionByUserId(params.userId);
-  const paidAt = normalizePortoneTimestamp(params.payment.paid_at);
-  const period = getNextBillingPeriod({
-    paidAt,
-    existingPeriodEnd: subscription?.current_period_end ?? null,
-  });
+  const alreadyApplied =
+    Boolean(params.payment.imp_uid) &&
+    getLastAppliedImpUid(subscription) === params.payment.imp_uid &&
+    subscription?.last_payment_status === "paid";
 
   await upsertPaymentRecord(
     buildPaymentRow(params.userId, params.payment, {
@@ -278,6 +350,16 @@ export async function syncVerifiedPaidPayment(params: {
       canceled_at: null,
     })
   );
+
+  if (alreadyApplied) {
+    return;
+  }
+
+  const paidAt = normalizePortoneTimestamp(params.payment.paid_at);
+  const period = getNextBillingPeriod({
+    paidAt,
+    existingPeriodEnd: subscription?.current_period_end ?? null,
+  });
 
   const supabase = getAdmin();
   const metadata = {
@@ -352,9 +434,8 @@ export async function syncFailedPayment(params: {
       merchant_uid: params.merchantUid,
       imp_uid: existing?.imp_uid ?? null,
       customer_uid: params.customerUid ?? existing?.customer_uid ?? null,
-      subscription_user_id:
-        existing?.subscription_user_id ?? params.userId,
-      amount: existing?.amount ?? 0,
+      subscription_user_id: existing?.subscription_user_id ?? params.userId,
+      amount: existing?.amount ?? PRO_MONTHLY_AMOUNT,
       currency: existing?.currency ?? PRO_MONTHLY_CURRENCY,
       status: "failed",
       paid_at: existing?.paid_at ?? null,
@@ -422,6 +503,112 @@ export async function syncCancelledPayment(params: {
   }
 }
 
+export async function chargeSubscriptionNow(params: {
+  userId: string;
+  customerUid: string;
+  buyerEmail?: string | null;
+  buyerName?: string | null;
+  pgProvider?: string | null;
+}): Promise<ChargeSubscriptionResult> {
+  const merchantUid = getMerchantUid(params.userId);
+  await recordPendingChargeAttempt({
+    userId: params.userId,
+    merchantUid,
+    customerUid: params.customerUid,
+    amount: PRO_MONTHLY_AMOUNT,
+    pgProvider: params.pgProvider,
+  });
+
+  let verifiedPayment: PortonePayment;
+  try {
+    const recurringPayment = await requestBillingPaymentAgain({
+      customer_uid: params.customerUid,
+      merchant_uid: merchantUid,
+      amount: PRO_MONTHLY_AMOUNT,
+      name: PRO_PLAN_NAME,
+      buyer_email: params.buyerEmail || undefined,
+      buyer_name: params.buyerName || undefined,
+    });
+
+    verifiedPayment = recurringPayment.imp_uid
+      ? await getPortonePaymentByImpUid(recurringPayment.imp_uid).catch(
+          () => recurringPayment
+        )
+      : recurringPayment;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Recurring billing failed.";
+
+    await syncFailedPayment({
+      userId: params.userId,
+      merchantUid,
+      customerUid: params.customerUid,
+      errorMessage: message,
+    }).catch(() => undefined);
+    await ensureInactiveSubscription(params.userId).catch(() => undefined);
+
+    return {
+      success: false,
+      merchantUid,
+      statusCode: 502,
+      error: message,
+    };
+  }
+
+  if (isPaidStatus(verifiedPayment.status)) {
+    await syncVerifiedPaidPayment({
+      userId: params.userId,
+      customerUid: params.customerUid,
+      payment: verifiedPayment,
+    });
+
+    return {
+      success: true,
+      merchantUid,
+      payment: verifiedPayment,
+      status: getPaymentStateFromPortone(verifiedPayment),
+    };
+  }
+
+  if (isCancelledStatus(verifiedPayment.status)) {
+    await syncCancelledPayment({
+      userId: params.userId,
+      payment: verifiedPayment,
+    });
+    await ensureInactiveSubscription(params.userId).catch(() => undefined);
+
+    return {
+      success: false,
+      merchantUid,
+      payment: verifiedPayment,
+      status: getPaymentStateFromPortone(verifiedPayment),
+      statusCode: 400,
+      error: "Payment was cancelled.",
+    };
+  }
+
+  const errorMessage =
+    verifiedPayment.fail_reason || "Recurring billing request failed.";
+
+  await syncFailedPayment({
+    userId: params.userId,
+    merchantUid,
+    customerUid: params.customerUid,
+    payment: verifiedPayment,
+    errorMessage,
+  });
+  await ensureInactiveSubscription(params.userId).catch(() => undefined);
+
+  return {
+    success: false,
+    merchantUid,
+    payment: verifiedPayment,
+    status: getPaymentStateFromPortone(verifiedPayment),
+    statusCode: 400,
+    error: errorMessage,
+  };
+}
+
 export async function cancelSubscriptionAtPeriodEnd(
   userId: string
 ): Promise<SubscriptionRecord | null> {
@@ -463,7 +650,7 @@ export async function ensureInactiveSubscription(
   const { error } = await supabase
     .from("subscriptions")
     .update({
-      plan: subscription.plan || FREE_PLAN_CODE,
+      plan: FREE_PLAN_CODE,
       status: "inactive",
       updated_at: new Date().toISOString(),
     })

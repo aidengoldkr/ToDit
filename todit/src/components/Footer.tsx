@@ -34,6 +34,8 @@ export default function Footer() {
           <div className={styles.infoRow}>
             <span>상호명 : Aiden Development</span>
             <span className={styles.divider}>|</span>
+            <span>(간이과세자)</span>
+            <span className={styles.divider}>|</span>
             <span>대표자 : 김건우</span>
             <span className={styles.divider}>|</span>
             <span>사업자등록번호 : 798-62-00920</span>

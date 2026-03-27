@@ -15,7 +15,6 @@ import {
   isSubscriptionActivePro,
 } from "@/lib/billing/service";
 import { getServerSession } from "@/lib/auth";
-import { getCustomerUid } from "@/lib/portone/helpers";
 import styles from "./page.module.css";
 
 function formatDate(value?: string | null): string | null {
@@ -50,19 +49,18 @@ export default async function PlanPage() {
   const nextBillingAt = formatDate(subscription?.next_billing_at);
   const isCancelScheduled = Boolean(subscription?.cancel_at_period_end);
   const impCode = process.env.NEXT_PUBLIC_PORTONE_IMP_CODE || "";
-  const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY || "";
-  const pgProvider = process.env.PORTONE_PG || "";
+  const billingChannelKey = process.env.PORTONE_BILLING_CHANNEL_KEY || "";
   const canRenderBillingButton =
     Boolean(session?.user?.id) &&
     Boolean(impCode) &&
-    Boolean(channelKey || pgProvider);
+    Boolean(billingChannelKey);
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <h1 className={styles.title}>ToDit 요금제</h1>
         <p className={styles.subtitle}>
-          문서를 구조화된 TODO로 바꾸는 AI 워크플로우에 맞는 플랜을 선택하세요.
+          문서를 구조화된 TODO로 바꾸는 워크플로우에 맞는 플랜을 선택하세요.
         </p>
       </header>
 
@@ -72,10 +70,10 @@ export default async function PlanPage() {
           <div className={styles.planHeader}>
             <h2 className={styles.planName}>Free</h2>
             <div className={styles.price}>
-              ₩0<span>/월</span>
+              무료<span>/월</span>
             </div>
             <p className={styles.planDesc}>
-              텍스트와 이미지 입력을 기반으로 월간 제한 내에서 TODO 계획을 생성합니다.
+              텍스트와 이미지 기반으로 기본 TODO 계획을 생성합니다.
             </p>
           </div>
 
@@ -93,17 +91,17 @@ export default async function PlanPage() {
               기본 AI 분석 모델 사용
             </li>
             <li className={styles.featureDisabled}>
-              <span className={styles.cross}>×</span>
+              <span className={styles.cross}>✕</span>
               PDF 분석
             </li>
             <li className={styles.featureDisabled}>
-              <span className={styles.cross}>×</span>
+              <span className={styles.cross}>✕</span>
               우선순위/상세 옵션
             </li>
           </ul>
 
           <button className={styles.planBtn} disabled>
-            {isPro ? "Free로 다운그레이드는 기간 종료 후 반영" : "현재 이용 중"}
+            {isPro ? "Free 전환은 현재 구독 종료 후 반영됩니다." : "현재 이용 중"}
           </button>
         </section>
 
@@ -117,7 +115,7 @@ export default async function PlanPage() {
               ₩2,900<span>/월</span>
             </div>
             <p className={styles.planDesc}>
-              무제한 생성, PDF 분석, 고급 옵션을 모두 사용하는 월간 구독입니다.
+              무제한 생성, PDF 분석, 고급 옵션을 포함한 월 구독 플랜입니다.
             </p>
           </div>
 
@@ -152,21 +150,18 @@ export default async function PlanPage() {
             ) : canRenderBillingButton ? (
               <SubButton
                 userId={session.user.id}
-                customerUid={getCustomerUid(session.user.id)}
                 impCode={impCode}
-                channelKey={channelKey}
-                pgProvider={pgProvider}
+                channelKey={billingChannelKey}
                 buyerEmail={session.user.email}
-                buyerName={session.user.name}
                 className={`${styles.planBtn} ${styles.proBtn}`}
-                buttonText="Pro 시작하기"
+                buttonText="카드 등록 후 구독 시작"
               />
             ) : (
               <button
                 className={`${styles.planBtn} ${styles.proBtn}`}
                 disabled
               >
-                결제 설정이 아직 준비되지 않았습니다
+                정기결제 채널 설정이 아직 준비되지 않았습니다.
               </button>
             )
           ) : (
@@ -182,7 +177,31 @@ export default async function PlanPage() {
       </div>
 
       <section className={styles.faq}>
-
+        <h3 className={styles.faqTitle}>현재 구독 상태</h3>
+        <div className={styles.faqItem}>
+          <h4>플랜</h4>
+          <p>{isPro ? `Pro (${PRO_MONTHLY_PRICE_LABEL})` : "Free"}</p>
+        </div>
+        <div className={styles.faqItem}>
+          <h4>이용 가능 기간</h4>
+          <p>
+            {currentPeriodEnd
+              ? `${currentPeriodEnd}까지 이용 가능합니다.`
+              : "현재 활성 구독이 없습니다."}
+          </p>
+        </div>
+        <div className={styles.faqItem}>
+          <h4>다음 결제 예정일</h4>
+          <p>{nextBillingAt || "예정된 자동 결제가 없습니다."}</p>
+        </div>
+        <div className={styles.faqItem}>
+          <h4>자동 갱신 상태</h4>
+          <p>
+            {isCancelScheduled
+              ? "현재 기간 종료 후 자동 갱신이 중단됩니다."
+              : "자동 갱신이 활성화되어 있습니다."}
+          </p>
+        </div>
       </section>
     </div>
   );

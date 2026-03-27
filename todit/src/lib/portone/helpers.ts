@@ -4,8 +4,19 @@ import {
 } from "@/lib/billing";
 import type { PortonePaymentStatus } from "@/lib/portone/types";
 
-export function getCustomerUid(userId: string): string {
-  return `todit_${userId}`;
+export function createCustomerUid(userId: string): string {
+  return `todit_bill_${userId}__${Date.now()}`;
+}
+
+export function extractUserIdFromCustomerUid(
+  customerUid?: string | null
+): string | null {
+  if (!customerUid) {
+    return null;
+  }
+
+  const match = customerUid.match(/^todit_bill_(.+)__\d+$/);
+  return match?.[1] ?? null;
 }
 
 export function getMerchantUid(userId: string): string {
@@ -56,6 +67,10 @@ export function isCancelledStatus(
 
 export function isBillingAmountValid(amount: number): boolean {
   return amount === getExpectedBillingAmount();
+}
+
+export function isBillingKeyIssueAmountValid(amount: number): boolean {
+  return amount === 0;
 }
 
 function addMonths(base: Date, months: number): Date {

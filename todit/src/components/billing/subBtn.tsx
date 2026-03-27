@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PRO_PLAN_NAME } from "@/lib/billing";
 import {
-  PRO_MONTHLY_AMOUNT,
-  PRO_PLAN_NAME,
-} from "@/lib/billing";
-import { buildBillingWebhookUrl, getMerchantUid } from "@/lib/portone/helpers";
+  buildBillingWebhookUrl,
+  createCustomerUid,
+  getMerchantUid,
+} from "@/lib/portone/helpers";
 
 type IamportRequestPayload = {
-  pg?: string;
-  channelKey?: string;
+  channelKey: string;
   pay_method: string;
   merchant_uid: string;
   name: string;
@@ -19,7 +19,6 @@ type IamportRequestPayload = {
   notice_url: string;
   m_redirect_url: string;
   buyer_email?: string;
-  buyer_name?: string;
 };
 
 type IamportResponse = {
@@ -85,7 +84,7 @@ function loadPortoneScript(): Promise<void> {
   return portoneScriptPromise;
 }
 
-async function verifyIssuedPayment(payload: {
+async function verifyBillingKeyIssue(payload: {
   imp_uid: string;
   merchant_uid: string;
   customer_uid: string;
@@ -103,32 +102,26 @@ async function verifyIssuedPayment(payload: {
     throw new Error(
       typeof data?.error === "string"
         ? data.error
-        : "결제 검증에 실패했습니다."
+        : "구독 시작 처리에 실패했습니다."
     );
   }
 }
 
 export function SubButton(props: {
   userId: string;
-  customerUid: string;
   impCode: string;
-  channelKey?: string;
-  pgProvider?: string;
+  channelKey: string;
   buyerEmail?: string | null;
-  buyerName?: string | null;
   className?: string;
   buttonText?: string;
 }) {
   const {
     userId,
-    customerUid,
     impCode,
     channelKey,
-    pgProvider,
     buyerEmail,
-    buyerName,
     className,
-    buttonText = "Pro 시작하기",
+    buttonText = "카드 등록 후 구독 시작",
   } = props;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -138,6 +131,10 @@ export function SubButton(props: {
   const handledRedirectRef = useRef(false);
 
   useEffect(() => {
+    if (!impCode || !channelKey) {
+      return;
+    }
+
     let active = true;
 
     loadPortoneScript()
@@ -164,40 +161,42 @@ export function SubButton(props: {
     return () => {
       active = false;
     };
-  }, [impCode]);
+  }, [channelKey, impCode]);
 
   useEffect(() => {
     const returned = searchParams.get("billing_return");
     const impUid = searchParams.get("imp_uid");
     const merchantUid = searchParams.get("merchant_uid");
-    const returnedCustomerUid = searchParams.get("customer_uid");
+    const customerUid = searchParams.get("customer_uid");
 
     if (
       handledRedirectRef.current ||
       returned !== "1" ||
       !impUid ||
       !merchantUid ||
-      !returnedCustomerUid
+      !customerUid
     ) {
       return;
     }
 
     handledRedirectRef.current = true;
     setLoading(true);
-    verifyIssuedPayment({
+    setError(null);
+
+    verifyBillingKeyIssue({
       imp_uid: impUid,
       merchant_uid: merchantUid,
-      customer_uid: returnedCustomerUid,
+      customer_uid: customerUid,
     })
       .then(() => {
         router.replace("/plan");
         router.refresh();
       })
-      .catch((verifyError) => {
+      .catch((finalizeError) => {
         setError(
-          verifyError instanceof Error
-            ? verifyError.message
-            : "결제 검증에 실패했습니다."
+          finalizeError instanceof Error
+            ? finalizeError.message
+            : "구독 시작 처리에 실패했습니다."
         );
       })
       .finally(() => {
@@ -206,8 +205,16 @@ export function SubButton(props: {
   }, [router, searchParams]);
 
   async function handleSubscribe() {
+    if (!channelKey) {
+      setError("정기결제 채널이 설정되지 않았습니다.");
+      return;
+    }
+
     setError(null);
     setLoading(true);
+
+    const customerUid = createCustomerUid(userId);
+    const merchantUid = getMerchantUid(userId);
 
     try {
       await loadPortoneScript();
@@ -217,7 +224,6 @@ export function SubButton(props: {
 
       window.IMP.init(impCode);
 
-      const merchantUid = getMerchantUid(userId);
       const origin =
         window.location.origin || process.env.NEXT_PUBLIC_APP_URL || "";
       const noticeUrl = buildBillingWebhookUrl(origin);
@@ -225,43 +231,40 @@ export function SubButton(props: {
         /\/$/,
         ""
       )}/plan?billing_return=1&customer_uid=${encodeURIComponent(customerUid)}`;
-      const channelPayload =
-        channelKey && channelKey.trim() !== ""
-          ? { channelKey }
-          : pgProvider && pgProvider.trim() !== ""
-            ? { pg: pgProvider }
-            : null;
-
-      if (!channelPayload) {
-        throw new Error("PORTONE_CHANNEL_KEY 또는 PORTONE_PG 설정이 필요합니다.");
-      }
 
       await new Promise<void>((resolve, reject) => {
         window.IMP?.request_pay(
           {
-            ...channelPayload,
+            channelKey,
             pay_method: "card",
             merchant_uid: merchantUid,
             name: PRO_PLAN_NAME,
-            amount: PRO_MONTHLY_AMOUNT,
+            amount: 0,
             customer_uid: customerUid,
             buyer_email: buyerEmail || undefined,
             notice_url: noticeUrl,
             m_redirect_url: redirectUrl,
           },
           async (response) => {
-            if (!response.success || !response.imp_uid || !response.merchant_uid) {
+            if (!response.success) {
               reject(
-                new Error(response.error_msg || "결제가 완료되지 않았습니다.")
+                new Error(
+                  response.error_msg || "카드 등록이 완료되지 않았습니다."
+                )
               );
               return;
             }
 
+            if (!response.imp_uid || !response.merchant_uid) {
+              reject(new Error("결제 응답에 필요한 정보가 없습니다."));
+              return;
+            }
+
             try {
-              await verifyIssuedPayment({
+              await verifyBillingKeyIssue({
                 imp_uid: response.imp_uid,
                 merchant_uid: response.merchant_uid,
-                customer_uid: customerUid,
+                customer_uid: response.customer_uid || customerUid,
               });
               resolve();
             } catch (verifyError) {
@@ -293,6 +296,7 @@ export function SubButton(props: {
       >
         {loading ? "처리 중..." : buttonText}
       </button>
+
       {error ? (
         <p style={{ marginTop: "12px", fontSize: "14px", color: "#b42318" }}>
           {error}
@@ -306,7 +310,7 @@ export function CancelSubscriptionButton(props: {
   className?: string;
   buttonText?: string;
 }) {
-  const { className, buttonText = "해지 예약하기" } = props;
+  const { className, buttonText = "자동 갱신 해지 예약" } = props;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
