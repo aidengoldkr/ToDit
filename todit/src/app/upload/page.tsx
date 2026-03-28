@@ -12,7 +12,6 @@ import {
   writeStoredTodoPlan,
   clearStoredTodoPlan,
 } from "@/lib/action-plan-session";
-import { getUpgradeHref, PRO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
 import { FREE_IMAGE_LIMIT } from "@/lib/plan-policy";
 import type { TodoPlanV2 } from "@/types";
 
@@ -21,12 +20,15 @@ import GoogleAd from "@/components/GoogleAd";
 
 
 type InputMode = "text" | "image" | "pdf";
+const PRO_PLAN_PRICE_LABEL = "₩2,900 / 월";
 
 interface UserUsage {
   count: number;
   limit: number | null;
   last_reset_at: string;
 }
+
+const FREE_USAGE_EXHAUSTED_MESSAGE = "무료 플랜의 To-Do 생성 가능 횟수를 모두 사용했습니다.";
 
 export default function UploadPage() {
   const { data: session, status } = useSession();
@@ -86,16 +88,18 @@ export default function UploadPage() {
     }
   }
 
-  async function fetchUsage() {
+  async function fetchUsage(): Promise<UserUsage | null> {
     try {
       const res = await fetch("/api/usage");
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as UserUsage;
         setUsage(data);
+        return data;
       }
     } catch (e) {
       console.error("Failed to fetch usage:", e);
     }
+    return null;
   }
 
   async function fetchConsent() {
@@ -138,7 +142,11 @@ export default function UploadPage() {
   }
 
   const isPro = usage?.limit === null;
-  const upgradeHref = getUpgradeHref(status === "authenticated");
+  const isUsageExhausted =
+    usage !== null &&
+    usage.limit !== null &&
+    usage.count >= usage.limit;
+  const upgradeHref = "/plan";
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -213,6 +221,20 @@ export default function UploadPage() {
     setError(null);
     
     try {
+      let latestUsage = usage;
+      if (!isPro && (!latestUsage || latestUsage.limit === null)) {
+        latestUsage = await fetchUsage();
+      }
+
+      const isLatestUsageExhausted =
+        latestUsage !== null &&
+        latestUsage.limit !== null &&
+        latestUsage.count >= latestUsage.limit;
+
+      if (!isPro && isLatestUsageExhausted) {
+        throw new Error(FREE_USAGE_EXHAUSTED_MESSAGE);
+      }
+
       let body: Record<string, unknown>;
 
       const options = isPro ? {
@@ -281,7 +303,9 @@ export default function UploadPage() {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         const message =
-          typeof payload?.error === "string"
+          response.status === 402 || payload?.code === "LIMIT_EXCEEDED"
+            ? FREE_USAGE_EXHAUSTED_MESSAGE
+            : typeof payload?.error === "string"
             ? payload.error
             : "파서 요청 처리에 실패했습니다. 다시 시도해 주세요.";
         throw new Error(message);
@@ -306,16 +330,18 @@ export default function UploadPage() {
       );
     } finally {
       setLoading(false);
-      fetchUsage(); // Refresh usage after parsing
+      void fetchUsage(); // Refresh usage after parsing
     }
   }
 
   const canSubmit =
     !loading &&
     status === "authenticated" &&
+    !isUsageExhausted &&
     ((activeTab === "text" && text.trim().length > 0) ||
       (activeTab === "image" && imageFiles.length > 0) ||
       (activeTab === "pdf" && pdfFile !== null));
+  const displayError = error ?? (isUsageExhausted ? FREE_USAGE_EXHAUSTED_MESSAGE : null);
 
   if (status === "unauthenticated") {
     return (
@@ -505,7 +531,7 @@ export default function UploadPage() {
               />
             )}
 
-            {error && <div className={styles.errorBox}>{error}</div>}
+            {displayError && <div className={styles.errorBox}>{displayError}</div>}
 
             <button
               className={styles.generateButton}
@@ -639,7 +665,7 @@ export default function UploadPage() {
             <div className={styles.limitsText}>
               <span>{usage ? usage.count : "..."} / {usage?.limit ? usage.limit : "무제한"}회 생성</span>
               <span>
-                {isPro ? "PDF 분석과 고급 옵션 활성화" : `${PRO_MONTHLY_PRICE_LABEL} · 광고 제거`}
+                {isPro ? "PDF 분석과 고급 옵션 활성화" : `${PRO_PLAN_PRICE_LABEL} · 광고 제거`}
               </span>
             </div>
             {isPro ? (

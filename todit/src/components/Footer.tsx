@@ -26,7 +26,7 @@ export default function Footer() {
           <nav className={styles.navLinks}>
             <Link href="/terms" className={styles.link}>이용약관</Link>
             <Link href="/privacy" className={styles.link}>개인정보처리방침</Link>
-            <Link href="/refund" className={styles.link}>환불 방침</Link>
+            <Link href="/refund" className={styles.link}>플랜 안내</Link>
           </nav>
         </div>
 

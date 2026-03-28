@@ -15,12 +15,7 @@ export default function PrivacyPage() {
             <li>회원 식별 정보: 이름, 이메일, 로그인 제공자 정보</li>
             <li>업로드 자료: 이미지, PDF, 텍스트 입력 및 AI 분석 결과</li>
             <li>서비스 이용 정보: 생성 이력, 사용량, 플랜 상태</li>
-            <li>결제 관련 최소 정보: 거래 식별값, 승인 결과, 결제 상태</li>
           </ul>
-          <p style={{ marginTop: "12px" }}>
-            카드 번호와 같은 민감한 결제 수단 정보는 PG사 또는 결제 파트너가 처리하며, 서비스가 직접 저장하지
-            않습니다.
-          </p>
         </section>
 
         <section className={styles.section}>
@@ -29,7 +24,7 @@ export default function PrivacyPage() {
           <ul style={{ color: "var(--text-soft)", marginTop: "12px", lineHeight: "1.7" }}>
             <li>회원 인증 및 계정 관리</li>
             <li>AI 기반 To-Do 생성과 결과 저장</li>
-            <li>플랜 상태, 사용량, 결제 결과 반영</li>
+            <li>플랜 상태와 사용량 반영</li>
             <li>보안 유지, 오류 대응, 서비스 개선</li>
           </ul>
         </section>
@@ -52,7 +47,6 @@ export default function PrivacyPage() {
             <li>OpenAI: AI 분석 및 생성 처리</li>
             <li>Google Cloud Vision / PDF 처리 서비스: OCR 및 문서 분석</li>
             <li>Supabase: 데이터 저장 및 인증 처리</li>
-            <li>PG사 또는 결제 파트너: 결제 승인 및 거래 처리</li>
           </ul>
         </section>
 

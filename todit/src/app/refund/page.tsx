@@ -5,7 +5,7 @@ export default function RefundPage() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <h1 className={styles.title}>결제 및 환불 안내</h1>
+        <h1 className={styles.title}>플랜 안내</h1>
         <p className={styles.updated}>최종 업데이트: 2026년 3월 25일</p>
 
         <section className={styles.section}>
@@ -17,18 +17,17 @@ export default function RefundPage() {
         </section>
 
         <section className={styles.section}>
-          <h2>2. 결제 처리</h2>
+          <h2>2. 현재 상태</h2>
           <p>
-            결제는 서비스가 연결한 PG사 또는 결제 파트너를 통해 처리됩니다. 서비스 내부에는 결제 승인
-            여부, 거래 식별 정보, 플랜 활성 상태와 같은 최소 정보만 반영됩니다.
+            현재 결제 기능은 준비 중입니다. 요금제 페이지의 구매 버튼은 준비 중 안내만 제공하며 실제 결제는
+            진행되지 않습니다.
           </p>
         </section>
 
         <section className={styles.section}>
-          <h2>3. 환불 문의</h2>
+          <h2>3. 문의</h2>
           <p>
-            환불 또는 결제 관련 문의는 아래 이메일로 접수해 주세요. 실제 환불 가능 여부와 처리 방식은 결제
-            상태와 이용 이력, 결제 수단 정책을 함께 확인한 뒤 안내됩니다.
+            플랜 또는 출시 일정 관련 문의는 아래 이메일로 접수해 주세요.
           </p>
           <p>문의: contact@aidengoldkr.dev</p>
         </section>

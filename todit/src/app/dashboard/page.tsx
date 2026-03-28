@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
 import { createStartClickHandler } from "@/lib/in-app";
-import { getUpgradeHref, PRO_MONTHLY_PRICE_LABEL } from "@/lib/billing";
 import type { TodoPlanV2 } from "@/types";
 import styles from "./page.module.css";
 import GoogleAd from "@/components/GoogleAd";
@@ -37,6 +36,7 @@ const DOCUMENT_TYPES = [
   "체크리스트",
   "기타",
 ];
+const PRO_PLAN_PRICE_LABEL = "₩2,900 / 월";
 
 export default function DashboardHomePage() {
   const { data: session, status } = useSession();
@@ -156,7 +156,7 @@ export default function DashboardHomePage() {
                 <div className={styles.quotaStats}>
                   <span>{usage ? usage.count : "..."} / {usage?.limit ? usage.limit : "무제한"} 생성</span>
                   <span>
-                    {isPro ? "PDF 분석과 고급 옵션 활성화" : `${PRO_MONTHLY_PRICE_LABEL} · 광고 제거`}
+                    {isPro ? "PDF 분석과 고급 옵션 활성화" : `${PRO_PLAN_PRICE_LABEL} · 광고 제거`}
                   </span>
                 </div>
               </div>
