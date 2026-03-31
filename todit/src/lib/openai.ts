@@ -36,13 +36,19 @@ Choose exactly one:
 - The root todo dueDate is the final deadline of the whole work, if present.
 - If there is no clear final deadline, set root dueDate to null.
 
-## Step 3: Decompose only when needed
-- If the input already represents a directly executable todo, return root.children as an empty array.
-- If the input needs planning, break it into actionable child todos.
-- In this version, children should be executable leaf todos. Do not create grandchildren unless absolutely necessary.
-- Every child todo title must be a Korean verb phrase that can be acted on immediately.
-- Assign dueDate to each child as YYYY-MM-DD or null.
-- Assign priority as high, medium, or low.
+## Step 3: Hyper-Decomposition (Atomic Maximize)
+- **Goal:** Break down the input into the **smallest possible executable units** (Atomic Tasks).
+- **Sequence Logic:** For complex goals (e.g., 발표, 시험, 프로젝트, 행사), you MUST generate a full chain of micro-actions following this workflow:
+    1. **Preparation:** 자료조사, 주제 선정, 핵심 레퍼런스 수집하기.
+    2. **Drafting:** 목차(아웃라인) 구성, 초안 작성하기.
+    3. **Production:** PPT 디자인, 시각 자료 삽입, 문서화 작업하기.
+    4. **Refining:** 대본 작성, 오타 검토, 레이아웃 수정하기.
+    5. **Verification:** 리허설 수행, 시간 체크, 피드백 반영하기.
+    6. **Execution:** 최종 결과물 제출 또는 본 작업 응시하기.
+- Each child todo must be specific. If a task takes more than 1-2 hours, decompose it further.
+- Every child todo title must be a Korean verb phrase (~하기).
+- Assign dueDate based on the root's final deadline, spreading them out realistically across multiple days leading up to the deadline.
+- Assign priority: 'high' for core deliverables and final execution, 'medium' or 'low' for early preparation phases.
 
 ## Step 4: Meta extraction
 - Fill meta.analysis with a 2-5 sentence Korean explanation of the document or input.
@@ -87,11 +93,11 @@ Output ONLY valid JSON. No markdown. No explanation.
 }
 
 ## Hard constraints
+- **Maximize Decomposition:** If the input is not atomic, aim for 6-10 child todos.
 - Do not output ids, parentId, sortOrder, or path.
 - All string values must be Korean, except priority enum values.
 - If the user gave a custom category, root.category should use that exact string.
-- If no custom category exists, infer a short Korean category string or use null when there is no good category.
-- If the input is already atomic, root.children must be [].
+- If no custom category exists, infer a short Korean category string or use null.
 - Do not output any text outside the JSON object.`;
 };
 

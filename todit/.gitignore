@@ -20,7 +20,11 @@
 .DS_Store
 *.pem
 
-.autorecord
+/autorecord
+
+.claude
+
+CLAUDE.md
 
 # debug
 npm-debug.log*
@@ -39,3 +43,6 @@ next-env.d.ts
 
 .supabase
 
+.claude.json
+.mcp.json
+.

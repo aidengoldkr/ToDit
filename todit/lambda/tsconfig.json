@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@/lib/*": ["./lib/*"],
+      "@/types": ["./types/index"],
+      "@/types/*": ["./types/*"]
+    }
+  },
+  "include": ["parse/**/*.ts", "lib/**/*.ts", "types/**/*.ts"]
+}

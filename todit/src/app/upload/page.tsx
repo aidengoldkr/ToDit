@@ -219,7 +219,7 @@ export default function UploadPage() {
   async function handleSubmit() {
     setLoading(true);
     setError(null);
-    
+
     try {
       let latestUsage = usage;
       if (!isPro && (!latestUsage || latestUsage.limit === null)) {
@@ -293,10 +293,18 @@ export default function UploadPage() {
         }
       }
 
-      // 4. Call parse API
-      const response = await fetch("/api/parse", {
+      // 4. Get short-lived JWT for Lambda auth
+      const tokenRes = await fetch("/api/parse/auth-token");
+      if (!tokenRes.ok) throw new Error("인증 토큰을 가져올 수 없습니다.");
+      const { token: lambdaToken } = await tokenRes.json();
+
+      // 5. Call parse API (Lambda direct)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_PARSE_LAMBDA_URL}/parse`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${lambdaToken}`,
+        },
         body: JSON.stringify(body),
       });
 
@@ -306,8 +314,8 @@ export default function UploadPage() {
           response.status === 402 || payload?.code === "LIMIT_EXCEEDED"
             ? FREE_USAGE_EXHAUSTED_MESSAGE
             : typeof payload?.error === "string"
-            ? payload.error
-            : "파서 요청 처리에 실패했습니다. 다시 시도해 주세요.";
+              ? payload.error
+              : "파서 요청 처리에 실패했습니다. 다시 시도해 주세요.";
         throw new Error(message);
       }
 
@@ -403,7 +411,6 @@ export default function UploadPage() {
                 {/* Google AdSense Area */}
                 <div className={styles.adContentArea}>
                   <GoogleAd slot="1035326864" format="rectangle" style={{ width: '100%', height: '250px' }} />
-                  <p className={styles.adTimerSnippet}>{activeTab === 'text' ? '5초' : '10초'} 후 분석 결과가 나타납니다.</p>
                 </div>
                 <div className={styles.proCtaLink}>
                   <Link href="/plan" target="_blank" className={styles.loadingAdLink}>
@@ -487,6 +494,51 @@ export default function UploadPage() {
                   />
                 </label>
 
+                {/* 모바일 업로드 버튼 (데스크탑에서는 CSS로 숨김) */}
+                <div className={styles.mobileUploadArea}>
+                  {activeTab === 'image' && (
+                    <>
+                      <label className={styles.mobileUploadBtn} htmlFor="mobile-camera-upload">
+                        <svg className={styles.mobileUploadIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>카메라로 촬영</span>
+                        <input
+                          id="mobile-camera-upload"
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          style={{ display: "none" }}
+                          onChange={(e) => { if (e.target.files) handleFiles(Array.from(e.target.files)); e.target.value = ''; }}
+                        />
+                      </label>
+                      <label className={styles.mobileUploadBtn} htmlFor="mobile-gallery-upload">
+                        <svg className={styles.mobileUploadIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 16M6 6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>갤러리에서 선택</span>
+                        <input
+                          id="mobile-gallery-upload"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          style={{ display: "none" }}
+                          onChange={(e) => { if (e.target.files) handleFiles(Array.from(e.target.files)); e.target.value = ''; }}
+                        />
+                      </label>
+                    </>
+                  )}
+                  {activeTab === 'pdf' && (
+                    <label className={`${styles.mobileUploadBtn} ${styles.mobileUploadBtnFull}`} htmlFor="file-upload">
+                      <svg className={styles.mobileUploadIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span>파일 선택</span>
+                    </label>
+                  )}
+                </div>
+
                 {(imageFiles.length > 0 || pdfFile) && (
                   <div className={styles.fileListWrapper}>
                     {activeTab === 'image' && (
@@ -533,14 +585,16 @@ export default function UploadPage() {
 
             {displayError && <div className={styles.errorBox}>{displayError}</div>}
 
-            <button
-              className={styles.generateButton}
-              disabled={!canSubmit}
-              onClick={handleSubmit}
-              style={{ marginTop: "24px" }}
-            >
-              {loading ? "생성 중..." : "To-Do 생성"}
-            </button>
+            <div className={styles.mobileCtaBar}>
+              <button
+                className={styles.generateButton}
+                disabled={!canSubmit}
+                onClick={handleSubmit}
+                style={{ marginTop: "24px" }}
+              >
+                {loading ? "생성 중..." : "To-Do 생성"}
+              </button>
+            </div>
           </main>
           {!isPro && (
             <div className={styles.adBanner} style={{ marginTop: "16px" }}>

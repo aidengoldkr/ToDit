@@ -1,0 +1,17 @@
+{
+  "name": "todit-parse-lambda",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google-cloud/vision": "^5.3.4",
+    "@supabase/supabase-js": "^2.99.1",
+    "next-auth": "^4.24.13",
+    "openai": "^6.26.0",
+    "pdf-parse": "^2.4.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

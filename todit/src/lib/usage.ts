@@ -109,6 +109,15 @@ export async function getOrResetUsage(
   };
 }
 
+export async function checkFreeUsageLimitExceeded(
+  userId: string,
+  displayName?: string | null
+): Promise<boolean | "error"> {
+  const usage = await getUsageRow(userId, displayName);
+  if (!usage) return "error";
+  return usage.balance >= FREE_MONTHLY_LIMIT;
+}
+
 export async function reserveFreeUsage(
   userId: string,
   displayName?: string | null

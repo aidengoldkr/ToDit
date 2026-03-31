@@ -907,3 +907,141 @@
   animation: progressPulse 1.5s infinite;
 }
 
+/* ═══════════════════════════════════════════════
+   MOBILE UPLOAD AREA  (데스크탑에서 숨김)
+═══════════════════════════════════════════════ */
+
+.mobileUploadArea {
+  display: none;
+}
+
+.mobileUploadBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  padding: 16px 12px;
+  background-color: var(--surface-soft);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: background-color 0.18s, border-color 0.18s;
+}
+
+.mobileUploadBtn:active {
+  background-color: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.mobileUploadBtnFull {
+  flex: unset;
+  width: 100%;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.mobileUploadIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE CTA BAR  (데스크탑: normal flow 유지)
+═══════════════════════════════════════════════ */
+
+.mobileCtaBar {
+  /* 데스크탑에서는 별도 스타일 없음 */
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE  ≤ 768px
+═══════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* 광고 숨김 */
+  .adBanner {
+    display: none;
+  }
+
+  .loadingAdSection {
+    display: none;
+  }
+
+  /* 데스크탑 드롭존 숨기고 모바일 버튼 표시 */
+  .dropzone {
+    display: none;
+  }
+
+  .mobileUploadArea {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  /* 고정 하단 CTA 바 */
+  .mobileCtaBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background-color: var(--surface);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* inline marginTop="24px" 무력화 */
+  .mobileCtaBar .generateButton {
+    margin-top: 0 !important;
+    width: 100%;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+  }
+
+  /* 고정 바 아래로 콘텐츠가 가려지지 않도록 */
+  .mainCard {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE  ≤ 480px
+═══════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .mobileUploadBtn {
+    padding: 14px 8px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .mobileUploadIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mobileCtaBar {
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobileCtaBar .generateButton {
+    font-size: 15px;
+    padding: 14px;
+  }
+}
+
