@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { clearStoredTodoPlan, readStoredTodoPlan, writeStoredTodoPlan } from "@/lib/action-plan-session";
 import type { DocumentType, Priority, Todo, TodoPlanV2 } from "@/types";
 import styles from "./page.module.css";
@@ -51,63 +52,67 @@ function TodoContent() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const id = searchParams.get("id");
+  const queryClient = useQueryClient();
 
   const [result, setResult] = useState<TodoPlanV2 | null>(null);
   const [draftResult, setDraftResult] = useState<TodoPlanV2 | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [usage, setUsage] = useState<{ limit: number | null } | null>(null);
   const [sortBy, setSortBy] = useState<"none" | "date" | "priority">("none");
   const [isEditing, setIsEditing] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (status === "loading") return;
+  const { data: usage = null } = useQuery<{ limit: number | null } | null>({
+    queryKey: ['userUsage'],
+    queryFn: async () => {
+      const res = await fetch("/api/usage");
+      if (!res.ok) throw new Error("Failed to fetch usage");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+  });
 
-      if (!id) {
-        const cachedPlan = readStoredTodoPlan(session?.user?.id);
-        if (cachedPlan) {
-          setResult(cachedPlan);
-          setHydrated(true);
-          return;
-        }
-        router.replace("/dashboard");
+  const { data: fetchedPlan, isFetching: isQueryLoading, error: queryError } = useQuery<TodoPlanV2>({
+    queryKey: ['todo', id],
+    queryFn: async () => {
+      const res = await fetch(`/api/todo/${id}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(typeof data.error === "string" ? data.error : "할 일을 불러오지 못했습니다.");
+      }
+      return res.json();
+    },
+    enabled: status === "authenticated" && !!id,
+    retry: 0,
+  });
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!id) {
+      const cachedPlan = readStoredTodoPlan(session?.user?.id);
+      if (cachedPlan) {
+        setResult(cachedPlan);
+        setHydrated(true);
         return;
       }
+      router.replace("/dashboard");
+      return;
+    }
 
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/todo/${id}`);
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setError(typeof data.error === "string" ? data.error : "할 일을 불러오지 못했습니다.");
-          return;
-        }
+    if (queryError) {
+      setError(queryError.message);
+      setLoading(false); // we override the manual loading via isQueryLoading logic later
+      return;
+    }
 
-        const data = await res.json();
-        setResult(data);
-      } catch (fetchError) {
-        console.error(fetchError);
-        setError("데이터를 불러오는 중 오류가 발생했습니다.");
-      } finally {
-        setLoading(false);
-      }
-
-      try {
-        const usageResponse = await fetch("/api/usage");
-        if (usageResponse.ok) {
-          setUsage(await usageResponse.json());
-        }
-      } catch (usageError) {
-        console.error("Usage fetch failed", usageError);
-      }
-
+    if (fetchedPlan) {
+      setResult(fetchedPlan);
       setHydrated(true);
-    };
+    }
+  }, [id, router, session?.user?.id, status, fetchedPlan, queryError]);
 
-    loadData();
-  }, [id, router, session?.user?.id, status]);
+  const isLoadingData = loading || (!!id && !hydrated && isQueryLoading);
 
   function updateDraft(mutator: (plan: TodoPlanV2) => TodoPlanV2) {
     setDraftResult((current) => {
@@ -139,6 +144,8 @@ function TodoContent() {
       }
 
       writeStoredTodoPlan(nextPlan, session.user.id);
+      queryClient.setQueryData(['todo', id], nextPlan);
+      queryClient.invalidateQueries({ queryKey: ['historyPlans'] });
     } catch (persistError) {
       console.error("Todo update failed", persistError);
       setResult(previousPlan);
@@ -361,11 +368,11 @@ function TodoContent() {
     );
   }
 
-  if (!hydrated || loading) {
+  if (!hydrated || isLoadingData) {
     return (
       <div className={styles.container}>
         <div className={styles.emptyState}>
-          <p>{loading ? "Todo를 저장하는 중..." : "Todo를 불러오는 중..."}</p>
+          <p>{isLoadingData && loading ? "Todo를 저장하는 중..." : "Todo를 불러오는 중..."}</p>
         </div>
       </div>
     );

@@ -41,7 +41,8 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       <div className={styles.leftSection}>
         <Link href={status === "authenticated" ? "/dashboard" : "/"} className={styles.logo}>
-          To<span style={{ color: "var(--accent)" }}>Dit</span>
+          To<span style={{ color: "var(--accent)" }}>Dit</span>{" "}
+          <span style={{ fontWeight: 100, color: "var(--semi-accent)", fontSize: "0.65em" }}>Lite</span>
         </Link>
       </div>
 

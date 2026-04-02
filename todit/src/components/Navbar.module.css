@@ -93,8 +93,7 @@
   font-weight: 700;
   color: var(--text);
   text-decoration: none;
-  display: flex;
-  align-items: center;
+  line-height: 1;
 }
 
 .rightSection {

@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { useIosKakaoModal } from "@/components/IosKakaoModalProvider";
 import { createStartClickHandler } from "@/lib/in-app";
-import type { TodoPlanV2 } from "@/types";
+import type { Todo, TodoPlanV2 } from "@/types";
 import styles from "./page.module.css";
 import GoogleAd from "@/components/GoogleAd";
 
@@ -23,6 +24,19 @@ interface SavedPlan {
   category: string | null;
   document_type: string | null;
   created_at: string;
+}
+
+function countTodos(todo: Todo): { total: number; done: number } {
+  if (todo.children.length === 0) {
+    return { total: 1, done: todo.done ? 1 : 0 };
+  }
+  return todo.children.reduce(
+    (acc, child) => {
+      const c = countTodos(child);
+      return { total: acc.total + c.total, done: acc.done + c.done };
+    },
+    { total: 0, done: 0 }
+  );
 }
 
 const DOCUMENT_TYPES = [
@@ -42,26 +56,60 @@ export default function DashboardHomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { openModal } = useIosKakaoModal();
+
   const handleLogin = createStartClickHandler(() => {
     signIn("google", { callbackUrl: "/dashboard" });
   }, openModal);
 
-  const [historyPlans, setHistoryPlans] = useState<SavedPlan[]>([]);
-  const [usage, setUsage] = useState<UserUsage | null>(null);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tempSearch, setTempSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [documentType, setDocumentType] = useState("all");
+  const [sortType, setSortType] = useState<"date" | "progress">("date");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      void fetchUsage();
+  const { data: usage = null } = useQuery<UserUsage | null>({
+    queryKey: ['userUsage'],
+    queryFn: async () => {
+      const res = await fetch("/api/usage");
+      if (!res.ok) throw new Error("Failed to fetch usage");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+  });
+
+  const { data: plansData, isFetching: isFetchingPlans } = useQuery({
+    queryKey: ['historyPlans', currentPage, category, documentType, search],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        category,
+        documentType,
+        search,
+      });
+      const res = await fetch(`/api/plans?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch plans");
+      return res.json() as Promise<{ data: SavedPlan[], totalCount: number }>;
+    },
+    enabled: status === "authenticated",
+    placeholderData: keepPreviousData,
+  });
+
+  const historyPlans = plansData?.data || [];
+  const totalCount = plansData?.totalCount || 0;
+  const loading = status === "loading" || (isFetchingPlans && !plansData);
+
+  const sortedPlans = [...historyPlans].sort((a, b) => {
+    if (sortType === "progress") {
+      const aCounts = countTodos(a.plan.root);
+      const bCounts = countTodos(b.plan.root);
+      const aProgress = aCounts.total > 0 ? aCounts.done / aCounts.total : 0;
+      const bProgress = bCounts.total > 0 ? bCounts.done / bCounts.total : 0;
+      return bProgress - aProgress;
     }
-  }, [status]);
+    return 0; // Default is "date", already sorted descending by API
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,45 +118,6 @@ export default function DashboardHomePage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [tempSearch]);
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      void fetchPlans();
-    }
-  }, [status, currentPage, category, documentType, search]);
-
-  async function fetchUsage() {
-    try {
-      const res = await fetch("/api/usage");
-      if (res.ok) {
-        setUsage(await res.json());
-      }
-    } catch (error) {
-      console.error("Failed to fetch usage:", error);
-    }
-  }
-
-  async function fetchPlans() {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(currentPage),
-        category,
-        documentType,
-        search,
-      });
-      const res = await fetch(`/api/plans?${params.toString()}`);
-      if (res.ok) {
-        const result = await res.json();
-        setHistoryPlans(result.data);
-        setTotalCount(result.totalCount);
-      }
-    } catch (error) {
-      console.error("Failed to fetch plans:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const totalPages = Math.ceil(totalCount / pageSize);
   const isPro = usage?.limit === null;
@@ -195,32 +204,48 @@ export default function DashboardHomePage() {
                 </div>
               </div>
 
-              <div className={styles.filterBar} style={{ gap: "12px", flexWrap: "wrap" }}>
-                <input
-                  className={styles.searchInput}
-                  style={{ maxWidth: "180px" }}
-                  placeholder="카테고리"
-                  value={category === "all" ? "" : category}
-                  onChange={(e) => {
-                    setCategory(e.target.value.trim() || "all");
-                    setCurrentPage(1);
-                  }}
-                />
-                <select
-                  className={styles.searchInput}
-                  style={{ maxWidth: "180px" }}
-                  value={documentType}
-                  onChange={(e) => {
-                    setDocumentType(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  {DOCUMENT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type === "all" ? "문서 종류 전체" : type}
-                    </option>
-                  ))}
-                </select>
+              <div className={styles.filterBar} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", width: "100%" }}>
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", flex: "1 1 auto" }}>
+                  <input
+                    className={styles.searchInput}
+                    style={{ maxWidth: "180px" }}
+                    placeholder="카테고리"
+                    value={category === "all" ? "" : category}
+                    onChange={(e) => {
+                      setCategory(e.target.value.trim() || "all");
+                      setCurrentPage(1);
+                    }}
+                  />
+                  <select
+                    className={styles.searchInput}
+                    style={{ maxWidth: "180px" }}
+                    value={documentType}
+                    onChange={(e) => {
+                      setDocumentType(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {DOCUMENT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type === "all" ? "문서 종류 전체" : type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.sortControls}>
+                  <button
+                    className={`${styles.sortBtn} ${sortType === "date" ? styles.activeSort : ""}`}
+                    onClick={() => setSortType("date")}
+                  >
+                    최신순
+                  </button>
+                  <button
+                    className={`${styles.sortBtn} ${sortType === "progress" ? styles.activeSort : ""}`}
+                    onClick={() => setSortType("progress")}
+                  >
+                    진행도순
+                  </button>
+                </div>
               </div>
 
               {loading ? (
@@ -228,17 +253,19 @@ export default function DashboardHomePage() {
                   <div className={styles.spinner}></div>
                   <p>불러오는 중...</p>
                 </div>
-              ) : historyPlans.length > 0 ? (
+              ) : sortedPlans.length > 0 ? (
                 <>
                   <div className={styles.historyList}>
-                    {historyPlans.map((plan) => {
+                    {sortedPlans.map((plan) => {
                       const displayCategory = plan.plan.root.category || "미분류";
                       const displayDocumentType = plan.plan.root.documentType || "기타";
+                      const { total, done } = countTodos(plan.plan.root);
+                      const isAllDone = total > 0 && done === total;
 
                       return (
                         <div
                           key={plan.id}
-                          className={styles.recentCard}
+                          className={`${styles.recentCard} ${isAllDone ? styles.recentCardDone : ""}`}
                           onClick={() => router.push(`/todo?id=${plan.id}`)}
                         >
                           <div className={styles.cardHeader}>
@@ -251,7 +278,16 @@ export default function DashboardHomePage() {
                             <p className={styles.cardDate}>
                               {new Date(plan.created_at).toLocaleDateString()} 생성
                             </p>
-                            <span className={styles.viewLink}>보기</span>
+                            <div className={styles.cardFooterRight}>
+                              {total > 0 && (
+                                <span
+                                  className={`${styles.progressBadge} ${isAllDone ? styles.progressBadgeDone : ""}`}
+                                >
+                                  {done}/{total}
+                                </span>
+                              )}
+                              <span className={styles.viewLink}>보기</span>
+                            </div>
                           </div>
                         </div>
                       );

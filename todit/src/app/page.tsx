@@ -66,7 +66,7 @@ export default function Home() {
         <div className={styles.heroContent}>
           <div className={styles.badge}>Next-Gen Productivity AI</div>
           <h1 className={styles.title}>
-            모든 문서를 <br /><span>ToDit</span> 으로 <br />한 번에 계획하세요
+            모든 문서를 <br /><span>ToDit</span> <span style={{ fontWeight: 100, color: "var(--semi-accent)", fontSize: "0.65em" }}>Lite</span>로 <br />한 번에 계획하세요
           </h1>
           <p className={styles.subtitle}>
             안내문, 공지사항, 문제지까지. 사진 한 장이면 ToDit이 할 일을 추출하고
@@ -114,7 +114,7 @@ export default function Home() {
 
           <div className={`${styles.diffCard} ${styles.toditCard}`}>
             <div className={styles.cardTop}>
-              <span className={styles.cardTag}>ToDit</span>
+              <span className={styles.cardTag}>ToDit <span style={{ fontWeight: 100, color: "var(--semi-accent)", fontSize: "0.65em" }}>Lite</span></span>
             </div>
             <p className={styles.cardInstruction}>Actionable Plan</p>
             <div className={styles.instructionBox}>발표 준비를 위한 4단계 To-Do</div>
@@ -173,6 +173,25 @@ export default function Home() {
       </section>
 
 
+      {/* Survey Promotion Section */}
+      <section className={styles.surveyPromo}>
+        <div className={styles.surveyPromoInner}>
+          <div className={styles.surveyPromoBadge}>한정 이벤트</div>
+          <h2 className={styles.surveyPromoTitle}>
+            설문 참여하고 <span>1년 Pro 무료</span>로 받으세요
+          </h2>
+          <p className={styles.surveyPromoDesc}>
+            5분이면 충분합니다. 짧은 설문에 응해주시면 ToDit Pro 플랜을 1년간 무료로 드립니다.
+          </p>
+          <button
+            className={styles.surveyPromoBtn}
+            onClick={() => router.push("/survey")}
+          >
+            설문 참여하기 →
+          </button>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className={styles.pricing} id="pricing">
         <div className={styles.pricingHeader}>
@@ -217,9 +236,15 @@ export default function Home() {
 
           {/* Pro Plan */}
           <div className={`${styles.card} ${styles.proCard}`}>
+            <div className={styles.proEventBadge}>🎁 한정 이벤트</div>
             <div className={styles.planHeader}>
               <h2 className={styles.planName}>Pro</h2>
-              <div className={styles.price}>₩2,900<span>/월</span></div>
+              <div className={styles.price}>
+                <span className={styles.priceStrike}>₩2,900</span>
+                <span className={styles.priceFree}>무료</span>
+                <span>/1년</span>
+              </div>
+              <p className={styles.landingSurveyNote}>설문 참여 시 1년간 무료 제공</p>
               <p className={styles.planDesc}>제한 없는 최신 AI 분석과 강력한 상세 설정을 원하시는 분들을 위해</p>
             </div>
 
@@ -247,8 +272,8 @@ export default function Home() {
               </li>
             </ul>
 
-            <button className={`${styles.planBtn} ${styles.proBtn}`} onClick={handleLogin}>
-              Pro로 업그레이드
+            <button className={`${styles.planBtn} ${styles.proBtn}`} onClick={() => router.push("/survey")}>
+              설문 참여하고 1년 무료 받기 →
             </button>
           </div>
         </div>

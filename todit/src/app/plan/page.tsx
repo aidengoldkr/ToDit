@@ -1,4 +1,4 @@
-import PrepareAlertButton from "@/components/PrepareAlertButton";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function PlanPage() {
@@ -53,14 +53,17 @@ export default function PlanPage() {
         </section>
 
         <section className={`${styles.card} ${styles.proCard}`}>
-          <div className={styles.currentBadgePro}>준비 중</div>
+          <div className={styles.currentBadgePro}>🎁 한정 이벤트</div>
           <div className={styles.planHeader}>
             <h2 className={styles.planName}>Pro</h2>
             <div className={styles.price}>
-              ₩2,900<span>/월</span>
+              <span className={styles.priceStrike}>₩2,900</span>
+              <span className={styles.priceFree}>무료</span>
+              <span className={styles.pricePeriod}>/1년</span>
             </div>
+            <p className={styles.surveyNote}>설문 참여 시 1년간 Pro를 무료로 드립니다.</p>
             <p className={styles.planDesc}>
-              무제한 생성, PDF 분석, 고급 옵션을 포함한 준비 중인 확장 플랜입니다.
+              무제한 생성, PDF 분석, 고급 옵션을 포함한 확장 플랜입니다.
             </p>
           </div>
 
@@ -87,9 +90,9 @@ export default function PlanPage() {
             </li>
           </ul>
 
-          <PrepareAlertButton className={`${styles.planBtn} ${styles.proBtn}`}>
-            구매하기
-          </PrepareAlertButton>
+          <Link href="/survey" className={`${styles.planBtn} ${styles.proBtn} ${styles.surveyBtn}`}>
+            설문 참여하고 1년 무료 받기 →
+          </Link>
         </section>
       </div>
 
@@ -100,12 +103,12 @@ export default function PlanPage() {
           <p>현재는 Free 플랜만 바로 이용할 수 있습니다.</p>
         </div>
         <div className={styles.faqItem}>
-          <h4>Pro 구매</h4>
-          <p>구매 버튼을 누르면 준비 중 안내가 표시됩니다.</p>
+          <h4>설문 이벤트</h4>
+          <p>설문에 참여하시면 Pro 플랜 1년이 즉시 무료로 지급됩니다. 설문은 5분 이내로 완료됩니다.</p>
         </div>
         <div className={styles.faqItem}>
           <h4>결제 상태</h4>
-          <p>결제 기능은 현재 비활성화되어 있습니다.</p>
+          <p>현재 설문 이벤트 기간 중이므로 별도 결제 없이 Pro를 이용하실 수 있습니다.</p>
         </div>
       </section>
     </div>

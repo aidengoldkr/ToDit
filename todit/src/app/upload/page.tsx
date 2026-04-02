@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
@@ -44,12 +45,12 @@ export default function UploadPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
 
+  const queryClient = useQueryClient();
+
   const [hasSavedResult, setHasSavedResult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [usage, setUsage] = useState<UserUsage | null>(null);
-  const [history, setHistory] = useState<any[]>([]);
   const [showConsentModal, setShowConsentModal] = useState(false);
 
   // Pro Options States
@@ -57,12 +58,43 @@ export default function UploadPage() {
   const [detailLevel, setDetailLevel] = useState<"brief" | "normal" | "detailed">("normal");
   const [customCategory, setCustomCategory] = useState("");
 
+  const { data: history = [] } = useQuery({
+    queryKey: ['todoHistory'],
+    queryFn: async () => {
+      const res = await fetch("/api/todo/history");
+      if (!res.ok) throw new Error("Failed to fetch history");
+      return res.json() as Promise<any[]>;
+    },
+    enabled: status === "authenticated",
+  });
+
+  const { data: usage = null, refetch: refetchUsage } = useQuery<UserUsage | null>({
+    queryKey: ['userUsage'],
+    queryFn: async () => {
+      const res = await fetch("/api/usage");
+      if (!res.ok) throw new Error("Failed to fetch usage");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+  });
+
+  useQuery({
+    queryKey: ['userConsent'],
+    queryFn: async () => {
+      const res = await fetch("/api/consent");
+      if (!res.ok) throw new Error("Failed to fetch consent");
+      const data = await res.json();
+      if (!data.agreed) {
+        setShowConsentModal(true);
+      }
+      return data;
+    },
+    enabled: status === "authenticated",
+  });
+
   useEffect(() => {
     if (status === "authenticated") {
       setHasSavedResult(readStoredTodoPlan(session?.user?.id) !== null);
-      fetchUsage();
-      fetchConsent();
-      fetchHistory();
     } else {
       setHasSavedResult(false);
     }
@@ -76,51 +108,12 @@ export default function UploadPage() {
     }
   }, [usage]);
 
-  async function fetchHistory() {
-    try {
-      const res = await fetch("/api/todo/history");
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch history:", e);
-    }
-  }
-
-  async function fetchUsage(): Promise<UserUsage | null> {
-    try {
-      const res = await fetch("/api/usage");
-      if (res.ok) {
-        const data = (await res.json()) as UserUsage;
-        setUsage(data);
-        return data;
-      }
-    } catch (e) {
-      console.error("Failed to fetch usage:", e);
-    }
-    return null;
-  }
-
-  async function fetchConsent() {
-    try {
-      const res = await fetch("/api/consent");
-      if (res.ok) {
-        const { agreed } = await res.json();
-        if (!agreed) {
-          setShowConsentModal(true);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to fetch consent:", e);
-    }
-  }
-
   async function handleAgree() {
     try {
       const res = await fetch("/api/consent", { method: "POST" });
       if (res.ok) {
         setShowConsentModal(false);
+        queryClient.invalidateQueries({ queryKey: ['userConsent'] });
       } else {
         const data = await res.json();
         setError(data.error || "동의 처리에 실패했습니다.");
@@ -223,7 +216,8 @@ export default function UploadPage() {
     try {
       let latestUsage = usage;
       if (!isPro && (!latestUsage || latestUsage.limit === null)) {
-        latestUsage = await fetchUsage();
+        const { data } = await refetchUsage();
+        if (data) latestUsage = data;
       }
 
       const isLatestUsageExhausted =
@@ -338,7 +332,8 @@ export default function UploadPage() {
       );
     } finally {
       setLoading(false);
-      void fetchUsage(); // Refresh usage after parsing
+      refetchUsage(); // Refresh usage after parsing
+      queryClient.invalidateQueries({ queryKey: ['todoHistory'] });
     }
   }
 

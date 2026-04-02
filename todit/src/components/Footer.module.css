@@ -1,10 +1,9 @@
 .footer {
-  background-color: #1a1a1c; /* Deep dark gray/black from the reference image */
-  color: #a1a1aa; /* Light gray text for readability and lower contrast */
+  color: var(--muted);
   font-family: var(--font-sans);
   padding: 48px 24px;
   width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.05); /* Subtle top border */
+  border-top: 1px solid var(--border);
 }
 
 .container {
@@ -33,7 +32,7 @@
   font-family: 'KblJump', sans-serif;
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   line-height: 1;
 }
 
@@ -52,13 +51,13 @@
 .link {
   font-size: 13px;
   font-weight: 500;
-  color: #d4d4d8; /* Slightly brighter than body text */
+  color: var(--muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .link:hover {
-  color: #fff;
+  color: var(--text);
 }
 
 .body {
@@ -78,14 +77,14 @@
 
 .divider {
   margin: 0 8px;
-  color: #52525b; /* Darker gray for the pipe separators */
+  color: var(--border-strong);
   font-size: 10px;
 }
 
 .bottom {
   margin-top: 16px;
   font-size: 12px;
-  color: #71717a; /* Even darker gray for the copyright text */
+  color: var(--muted);
 }
 
 .miniFooter {

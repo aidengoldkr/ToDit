@@ -100,6 +100,41 @@
   color: var(--muted);
 }
 
+.priceStrike {
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  color: var(--muted) !important;
+  text-decoration: line-through;
+  margin-right: 8px;
+}
+
+.priceFree {
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  color: var(--accent) !important;
+  text-decoration: none;
+}
+
+.pricePeriod {
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: var(--muted) !important;
+}
+
+.surveyNote {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: -12px;
+}
+
+.surveyBtn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
 .planDesc {
   font-size: 15px;
   color: var(--text-soft);

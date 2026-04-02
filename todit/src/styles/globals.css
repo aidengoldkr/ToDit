@@ -205,4 +205,8 @@ html.dark .tag--normal {
         width: 100% !important;
         position: relative;
     }
+    body {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
 }

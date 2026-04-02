@@ -21,7 +21,8 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.header}>
           <div className={styles.logo}>
-            To<span style={{ color: "var(--accent)" }}>Dit</span>
+            To<span style={{ color: "var(--accent)" }}>Dit</span>{" "}
+            <span style={{ fontWeight: 100, color: "var(--semi-accent)", fontSize: "0.65em" }}>Lite</span>
           </div>
           <nav className={styles.navLinks}>
             <Link href="/terms" className={styles.link}>이용약관</Link>

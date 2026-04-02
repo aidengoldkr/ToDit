@@ -14,7 +14,7 @@
   padding: 40px;
   background-color: var(--surface);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   text-align: center;
 }
 
@@ -191,7 +191,7 @@
 
 .searchInput {
   width: 100%;
-  padding: 9px 12px 9px 36px;
+  padding: 9px 12px 9px 12px;
   background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -245,6 +245,36 @@
   border-color: var(--accent);
 }
 
+/* Sort Controls */
+.sortControls {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.sortBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortBtn:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.sortBtn.activeSort {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-soft);
+  font-weight: 500;
+}
+
 .historyList {
   display: flex;
   flex-direction: column;
@@ -256,15 +286,20 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .recentCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border-color: var(--accent-soft);
+}
+
+.recentCardDone {
+  border-color: var(--accent-soft);
+  background: #323232;
 }
 
 .cardHeader {
@@ -309,6 +344,26 @@
   font-size: 11px;
   color: var(--accent);
   font-weight: 600;
+}
+
+.cardFooterRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888e9c;
+  background: #323232;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.progressBadgeDone {
+  color: var(--white);
+  background: var(--accent);
 }
 
 /* Pagination */
@@ -408,7 +463,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .quotaBody {
@@ -532,8 +587,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 900px) {
@@ -543,13 +603,13 @@
     gap: 24px !important;
     width: 100% !important;
   }
-  
+
   .historyHeader {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 12px !important;
   }
-  
+
   .searchBox {
     max-width: 100% !important;
     width: 100% !important;
@@ -602,7 +662,9 @@
     word-break: break-all !important;
   }
 
-  .leftColumn, .rightColumn, .historySection {
+  .leftColumn,
+  .rightColumn,
+  .historySection {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -617,6 +679,7 @@
   .mainContent {
     padding: 16px 8px !important;
   }
+
   .heroTitle {
     font-size: 18px !important;
   }
