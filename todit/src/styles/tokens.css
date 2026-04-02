@@ -24,6 +24,11 @@
     --tiny-btn-border: #a7f3d0;
     --tiny-btn-text: #047857;
 
+    --badge-bg: #e5e7eb;
+    --badge-text: #6b7280;
+    --card-done-bg: var(--success-soft);
+    --border-soft: #f3f4f6;
+
     --radius-lg: 18px;
     --radius-md: 14px;
     --radius-sm: 12px;
@@ -50,6 +55,11 @@ html.dark {
     --notice-text: #fbbf24;
     --tiny-btn-border: rgba(16, 185, 129, 0.28);
     --tiny-btn-text: #34d399;
+
+    --badge-bg: #323232;
+    --badge-text: #888e9c;
+    --card-done-bg: #323232;
+    --border-soft: #262626;
 
     --shadow: none;
 }
